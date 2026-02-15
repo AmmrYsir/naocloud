@@ -550,7 +550,12 @@ export async function getPluginCatalog(forceRemote = false): Promise<PluginCatal
 
 	// Try fetching from remote
 	try {
-		const response = await fetch(CATALOG_REMOTE_URL);
+		const response = await fetch(CATALOG_REMOTE_URL, {
+			headers: {
+				"User-Agent": "naocloud",
+				"Accept": "application/json",
+			},
+		});
 		if (!response.ok) throw new Error(`HTTP ${response.status}`);
 		const catalog = await response.json() as PluginCatalog;
 		
