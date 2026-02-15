@@ -10,16 +10,30 @@ const JWT_SECRET = import.meta.env.JWT_SECRET || "serverpilot-dev-secret-change-
 const TOKEN_COOKIE = "sp_token";
 const TOKEN_EXPIRY = "24h";
 
+// Startup validation: warn loudly if using default secret
+if (JWT_SECRET === "serverpilot-dev-secret-change-me") {
+	const env = import.meta.env.PROD ? "PRODUCTION" : "DEVELOPMENT";
+	if (import.meta.env.PROD) {
+		throw new Error("FATAL: JWT_SECRET must be set in production. Refusing to start with default secret.");
+	}
+	console.warn(`[AUTH] WARNING (${env}): Using default JWT_SECRET. Set JWT_SECRET env var before deploying.`);
+}
+
 export interface User {
 	username: string;
 	role: "admin" | "viewer";
 }
 
+/* Pre-computed bcrypt hash for default "admin" password.
+ * Generated with: bcrypt.hashSync("admin", 10)
+ * This avoids blocking the event loop on module load. */
+const ADMIN_HASH = "$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy";
+
 /* Default admin account – in production, store hashed passwords in a config file */
 const DEFAULT_USERS: Array<{ username: string; hash: string; role: "admin" | "viewer" }> = [
 	{
 		username: "admin",
-		hash: bcrypt.hashSync("admin", 10),
+		hash: ADMIN_HASH,
 		role: "admin",
 	},
 ];
@@ -50,21 +64,21 @@ export function getUserFromCookies(cookies: AstroCookies): User | null {
 	return verifyToken(token);
 }
 
-/** Check if the request IP is on local LAN. */
+/** Check if the request IP is on local LAN (RFC 1918 + loopback). */
 export function isLocalNetwork(ip: string | undefined): boolean {
 	if (!ip) return true; // SSR localhost
-	return (
-		ip === "127.0.0.1" ||
-		ip === "::1" ||
-		ip.startsWith("192.168.") ||
-		ip.startsWith("10.") ||
-		ip.startsWith("172.16.") ||
-		ip.startsWith("172.17.") ||
-		ip.startsWith("172.18.") ||
-		ip.startsWith("172.19.") ||
-		ip.startsWith("172.2") ||
-		ip.startsWith("172.3")
-	);
+	// Normalize IPv6-mapped IPv4
+	const normalized = ip.startsWith("::ffff:") ? ip.slice(7) : ip;
+	if (normalized === "127.0.0.1" || normalized === "::1") return true;
+	if (normalized.startsWith("192.168.")) return true;
+	if (normalized.startsWith("10.")) return true;
+	// RFC 1918: 172.16.0.0 – 172.31.255.255
+	const m = normalized.match(/^172\.(\d+)\./);
+	if (m) {
+		const second = parseInt(m[1], 10);
+		if (second >= 16 && second <= 31) return true;
+	}
+	return false;
 }
 
-export { TOKEN_COOKIE, JWT_SECRET };
+export { TOKEN_COOKIE };

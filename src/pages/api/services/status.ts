@@ -16,7 +16,7 @@ export const GET: APIRoute = async ({ cookies, url }) => {
 		return new Response(JSON.stringify({ error: "Invalid or disallowed service" }), { status: 400 });
 	}
 
-	const result = runSync(`systemctl is-active ${name}`);
+	const result = runSync("systemctl:is-active", [name]);
 	const active = result.stdout?.trim() === "active";
 
 	return new Response(

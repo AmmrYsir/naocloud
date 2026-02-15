@@ -14,7 +14,7 @@ export const GET: APIRoute = async ({ cookies }) => {
 
 	try {
 		// Use docker ps with JSON format
-		const result = runSync('docker ps -a --format "{{json .}}"', 15000);
+		const result = runSync("docker:ps", [], 15000);
 
 		if (!result.ok) {
 			return new Response(JSON.stringify([]), {

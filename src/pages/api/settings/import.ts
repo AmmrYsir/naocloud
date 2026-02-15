@@ -16,13 +16,13 @@ export const POST: APIRoute = async ({ cookies, request }) => {
 
 		if (config?.server?.hostname) {
 			const sanitized = config.server.hostname.replace(/[^a-zA-Z0-9\-]/g, "");
-			const r = await runAsync(`hostnamectl set-hostname ${sanitized}`);
+			const r = await runAsync("hostnamectl:set-hostname", [sanitized]);
 			results.push(r.ok ? `Hostname set to ${sanitized}` : `Hostname failed: ${r.stderr}`);
 		}
 
 		if (config?.server?.timezone) {
 			const sanitized = config.server.timezone.replace(/[^a-zA-Z0-9\/\_\-]/g, "");
-			const r = await runAsync(`timedatectl set-timezone ${sanitized}`);
+			const r = await runAsync("timedatectl:set-timezone", [sanitized]);
 			results.push(r.ok ? `Timezone set to ${sanitized}` : `Timezone failed: ${r.stderr}`);
 		}
 
@@ -30,7 +30,7 @@ export const POST: APIRoute = async ({ cookies, request }) => {
 			JSON.stringify({ ok: true, results }),
 			{ status: 200, headers: { "Content-Type": "application/json" } }
 		);
-	} catch (err: any) {
-		return new Response(JSON.stringify({ error: err.message }), { status: 500 });
+	} catch {
+		return new Response(JSON.stringify({ error: "Internal server error" }), { status: 500 });
 	}
 };

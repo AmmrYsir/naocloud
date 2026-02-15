@@ -1,53 +1,67 @@
 /**
  * exec.ts – Centralized safe command execution layer.
  * All system commands are routed through this module.
- * Only whitelisted commands are allowed to prevent arbitrary execution.
+ *
+ * SECURITY: Uses execFileSync/execFile with argument arrays (no shell).
+ * Commands are defined in a registry with exact binary paths and static args.
+ * Dynamic arguments are passed separately and validated per-command.
  */
 
-import { execSync, exec as execCb } from "node:child_process";
+import { execFileSync, execFile as execFileCb } from "node:child_process";
 
-/* ── Whitelist of allowed command prefixes ── */
-const ALLOWED_COMMANDS = [
-	"top",
-	"free",
-	"df",
-	"uptime",
-	"cat /proc",
-	"hostname",
-	"uname",
-	"lscpu",
-	"ip addr",
-	"ip -s link",
-	"timedatectl",
-	"systemctl status",
-	"systemctl start",
-	"systemctl stop",
-	"systemctl restart",
-	"systemctl is-active",
-	"docker ps",
-	"docker images",
-	"docker volume",
-	"docker network",
-	"docker stats",
-	"docker inspect",
-	"docker start",
-	"docker stop",
-	"docker restart",
-	"docker rm",
-	"docker rmi",
-	"docker logs",
-	"docker top",
-	"apt update",
-	"apt upgrade",
-	"apt list",
-	"hostnamectl set-hostname",
-	"timedatectl set-timezone",
-];
-
-function isAllowed(cmd: string): boolean {
-	const trimmed = cmd.trim();
-	return ALLOWED_COMMANDS.some((prefix) => trimmed.startsWith(prefix));
+/* ── Command registry: maps command keys to binary + static args ── */
+export interface CommandDef {
+	bin: string;
+	args: string[];
 }
+
+/**
+ * Registry of allowed commands. Each key maps to a binary and its fixed arguments.
+ * Dynamic arguments (container IDs, service names, etc.) are appended by callers
+ * via the `extraArgs` parameter after validation.
+ */
+const COMMAND_REGISTRY: Record<string, CommandDef> = {
+	// System info (read-only)
+	"cat:proc/stat": { bin: "cat", args: ["/proc/stat"] },
+	"cat:proc/loadavg": { bin: "cat", args: ["/proc/loadavg"] },
+	"cat:proc/cpuinfo": { bin: "cat", args: ["/proc/cpuinfo"] },
+	"cat:proc/uptime": { bin: "cat", args: ["/proc/uptime"] },
+	"cat:proc/net/dev": { bin: "cat", args: ["/proc/net/dev"] },
+	"cat:proc/version": { bin: "cat", args: ["/proc/version"] },
+	hostname: { bin: "hostname", args: [] },
+	uname: { bin: "uname", args: [] },
+	uptime: { bin: "uptime", args: [] },
+	lscpu: { bin: "lscpu", args: [] },
+	"ip:addr": { bin: "ip", args: ["addr"] },
+	"ip:link": { bin: "ip", args: ["-s", "link"] },
+	"free": { bin: "free", args: ["-b"] },
+	"df": { bin: "df", args: ["-B1", "/"] },
+	timedatectl: { bin: "timedatectl", args: [] },
+
+	// Systemd service management
+	"systemctl:is-active": { bin: "systemctl", args: ["is-active"] },
+	"systemctl:status": { bin: "systemctl", args: ["status"] },
+	"systemctl:start": { bin: "systemctl", args: ["start"] },
+	"systemctl:stop": { bin: "systemctl", args: ["stop"] },
+	"systemctl:restart": { bin: "systemctl", args: ["restart"] },
+
+	// Docker read-only
+	"docker:ps": { bin: "docker", args: ["ps", "-a", "--format", "{{json .}}"] },
+	"docker:images": { bin: "docker", args: ["images", "--format", "{{json .}}"] },
+	"docker:volumes": { bin: "docker", args: ["volume", "ls", "--format", "{{json .}}"] },
+	"docker:networks": { bin: "docker", args: ["network", "ls", "--format", "{{json .}}"] },
+	"docker:logs": { bin: "docker", args: ["logs"] },
+
+	// Docker container lifecycle
+	"docker:start": { bin: "docker", args: ["start"] },
+	"docker:stop": { bin: "docker", args: ["stop"] },
+	"docker:restart": { bin: "docker", args: ["restart"] },
+	"docker:rm": { bin: "docker", args: ["rm", "-f"] },
+
+	// System configuration
+	"hostnamectl:set-hostname": { bin: "hostnamectl", args: ["set-hostname"] },
+	"timedatectl:set-timezone": { bin: "timedatectl", args: ["set-timezone"] },
+};
 
 export interface ExecResult {
 	ok: boolean;
@@ -57,15 +71,19 @@ export interface ExecResult {
 }
 
 /**
- * Run a command synchronously (blocking).
- * Returns structured result. Throws on disallowed commands.
+ * Run a registered command synchronously (blocking).
+ * @param key - Registry key (e.g. "docker:ps", "free", "cat:proc/stat")
+ * @param extraArgs - Additional arguments appended after the fixed args (already validated by caller)
+ * @param timeoutMs - Execution timeout in milliseconds
  */
-export function runSync(cmd: string, timeoutMs = 10_000): ExecResult {
-	if (!isAllowed(cmd)) {
-		return { ok: false, stdout: "", stderr: `Command not allowed: ${cmd}`, code: 1 };
+export function runSync(key: string, extraArgs: string[] = [], timeoutMs = 10_000): ExecResult {
+	const def = COMMAND_REGISTRY[key];
+	if (!def) {
+		return { ok: false, stdout: "", stderr: `Command not registered: ${key}`, code: 1 };
 	}
+	const allArgs = [...def.args, ...extraArgs];
 	try {
-		const stdout = execSync(cmd, {
+		const stdout = execFileSync(def.bin, allArgs, {
 			timeout: timeoutMs,
 			encoding: "utf-8",
 			stdio: ["pipe", "pipe", "pipe"],
@@ -82,15 +100,20 @@ export function runSync(cmd: string, timeoutMs = 10_000): ExecResult {
 }
 
 /**
- * Run a command asynchronously (non-blocking).
+ * Run a registered command asynchronously (non-blocking).
+ * @param key - Registry key
+ * @param extraArgs - Additional arguments appended after the fixed args
+ * @param timeoutMs - Execution timeout in milliseconds
  */
-export function runAsync(cmd: string, timeoutMs = 15_000): Promise<ExecResult> {
+export function runAsync(key: string, extraArgs: string[] = [], timeoutMs = 15_000): Promise<ExecResult> {
 	return new Promise((resolve) => {
-		if (!isAllowed(cmd)) {
-			resolve({ ok: false, stdout: "", stderr: `Command not allowed: ${cmd}`, code: 1 });
+		const def = COMMAND_REGISTRY[key];
+		if (!def) {
+			resolve({ ok: false, stdout: "", stderr: `Command not registered: ${key}`, code: 1 });
 			return;
 		}
-		const _child = execCb(cmd, { timeout: timeoutMs, encoding: "utf-8" }, (err, stdout, stderr) => {
+		const allArgs = [...def.args, ...extraArgs];
+		execFileCb(def.bin, allArgs, { timeout: timeoutMs, encoding: "utf-8" }, (err, stdout, stderr) => {
 			if (err) {
 				resolve({
 					ok: false,

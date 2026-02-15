@@ -10,7 +10,7 @@ export const GET: APIRoute = async ({ cookies }) => {
 	if (!user) return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 });
 
 	try {
-		const result = runSync('docker volume ls --format "{{json .}}"', 10000);
+		const result = runSync("docker:volumes", [], 10000);
 		if (!result.ok) {
 			return new Response(JSON.stringify({ Volumes: [] }), { status: 200, headers: { "Content-Type": "application/json" } });
 		}

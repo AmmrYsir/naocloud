@@ -12,7 +12,7 @@ export const GET: APIRoute = async ({ cookies }) => {
 	}
 
 	try {
-		const result = runSync('docker images --format "{{json .}}"', 15000);
+		const result = runSync("docker:images", [], 15000);
 		if (!result.ok) {
 			return new Response(JSON.stringify([]), { status: 200, headers: { "Content-Type": "application/json" } });
 		}

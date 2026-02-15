@@ -13,7 +13,7 @@ export const GET: APIRoute = async ({ cookies }) => {
 
 	try {
 		// CPU usage from /proc/stat (simplified)
-		const cpuResult = runSync("cat /proc/stat");
+		const cpuResult = runSync("cat:proc/stat");
 		let cpuPercent = 0;
 		if (cpuResult.ok) {
 			const lines = cpuResult.stdout.split("\n");
@@ -27,17 +27,17 @@ export const GET: APIRoute = async ({ cookies }) => {
 		}
 
 		// Load average
-		const loadResult = runSync("cat /proc/loadavg");
+		const loadResult = runSync("cat:proc/loadavg");
 		const loadAvg = loadResult.ok ? loadResult.stdout.split(" ").slice(0, 3).join(", ") : "N/A";
 
 		// CPU cores
-		const coresResult = runSync("cat /proc/cpuinfo");
+		const coresResult = runSync("cat:proc/cpuinfo");
 		const cores = coresResult.ok
 			? (coresResult.stdout.match(/^processor/gm) || []).length
 			: 0;
 
 		// Memory from free
-		const memResult = runSync("free -b");
+		const memResult = runSync("free");
 		let memTotal = 0, memUsed = 0, memFree = 0;
 		if (memResult.ok) {
 			const memLine = memResult.stdout.split("\n").find((l) => l.startsWith("Mem:"));
@@ -50,7 +50,7 @@ export const GET: APIRoute = async ({ cookies }) => {
 		}
 
 		// Disk
-		const diskResult = runSync("df -B1 /");
+		const diskResult = runSync("df");
 		let diskTotal = 0, diskUsed = 0;
 		if (diskResult.ok) {
 			const lines = diskResult.stdout.split("\n").slice(1);
@@ -62,7 +62,7 @@ export const GET: APIRoute = async ({ cookies }) => {
 		}
 
 		// Uptime
-		const uptimeResult = runSync("cat /proc/uptime");
+		const uptimeResult = runSync("cat:proc/uptime");
 		let uptimeStr = "N/A";
 		if (uptimeResult.ok) {
 			const secs = parseFloat(uptimeResult.stdout.split(" ")[0]);
@@ -73,7 +73,7 @@ export const GET: APIRoute = async ({ cookies }) => {
 		}
 
 		// Network I/O
-		const netResult = runSync("cat /proc/net/dev");
+		const netResult = runSync("cat:proc/net/dev");
 		let rxBytes = 0, txBytes = 0;
 		if (netResult.ok) {
 			const lines = netResult.stdout.split("\n").slice(2);

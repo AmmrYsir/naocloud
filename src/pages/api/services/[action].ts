@@ -26,13 +26,13 @@ export const POST: APIRoute = async ({ cookies, request, params }) => {
 			return new Response(JSON.stringify({ error: "Invalid or disallowed service" }), { status: 400 });
 		}
 
-		const result = await runAsync(`systemctl ${action} ${name}`, 15000);
+		const result = await runAsync(`systemctl:${action}`, [name], 15000);
 
 		return new Response(
 			JSON.stringify({ ok: result.ok, message: result.stdout || result.stderr }),
 			{ status: result.ok ? 200 : 500, headers: { "Content-Type": "application/json" } }
 		);
-	} catch (err: any) {
-		return new Response(JSON.stringify({ error: err.message }), { status: 500 });
+	} catch {
+		return new Response(JSON.stringify({ error: "Internal server error" }), { status: 500 });
 	}
 };

@@ -13,10 +13,10 @@ if (!user) return Astro.redirect("/login");
 let sysInfo: Record<string, string> = {};
 try {
 	const hostname = runSync("hostname");
-	const kernel = runSync("uname -r");
-	const os = runSync("cat /proc/version");
+	const kernel = runSync("uname", ["-r"]);
+	const os = runSync("cat:proc/version");
 	const cpuInfo = runSync("lscpu");
-	const uptime = runSync("uptime -p");
+	const uptime = runSync("uptime", ["-p"]);
 
 	sysInfo = {
 		hostname: hostname.stdout || "Unknown",

@@ -1,13 +1,9 @@
 /**
- * GET|POST /api/auth/logout – Clear auth cookie and redirect to login.
+ * POST /api/auth/logout – Clear auth cookie.
+ * GET handler removed to prevent CSRF logout via image/link tags.
  */
 import type { APIRoute } from "astro";
 import { TOKEN_COOKIE } from "../../../lib/auth";
-
-export const GET: APIRoute = async ({ cookies, redirect }) => {
-	cookies.delete(TOKEN_COOKIE, { path: "/" });
-	return redirect("/login");
-};
 
 export const POST: APIRoute = async ({ cookies }) => {
 	cookies.delete(TOKEN_COOKIE, { path: "/" });

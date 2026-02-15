@@ -24,16 +24,16 @@ export const GET: APIRoute = async ({ cookies, url }) => {
 		let result;
 		switch (path) {
 			case "containers":
-				result = runSync("docker ps -a --format '{{json .}}'", 15000);
+				result = runSync("docker:ps", [], 15000);
 				break;
 			case "images":
-				result = runSync("docker images --format '{{json .}}'", 15000);
+				result = runSync("docker:images", [], 15000);
 				break;
 			case "volumes":
-				result = runSync("docker volume ls --format '{{json .}}'", 10000);
+				result = runSync("docker:volumes", [], 10000);
 				break;
 			case "networks":
-				result = runSync("docker network ls --format '{{json .}}'", 10000);
+				result = runSync("docker:networks", [], 10000);
 				break;
 			default:
 				return new Response(JSON.stringify({ error: "Unknown resource" }), { status: 400 });
@@ -57,8 +57,8 @@ export const GET: APIRoute = async ({ cookies, url }) => {
 			status: 200,
 			headers: { "Content-Type": "application/json" },
 		});
-	} catch (err: any) {
-		return new Response(JSON.stringify({ error: err.message }), { status: 500 });
+	} catch {
+		return new Response(JSON.stringify({ error: "Internal server error" }), { status: 500 });
 	}
 };
 
@@ -86,18 +86,16 @@ export const POST: APIRoute = async ({ cookies, request }) => {
 		}
 
 		// Sanitize container ID (alphanumeric + underscores + hyphens only)
-		const sanitized = id.replace(/[^a-zA-Z0-9_\-\.]/g, "");
-		const cmd = action === "rm"
-			? `docker rm -f ${sanitized}`
-			: `docker ${action} ${sanitized}`;
+		const sanitized = id.replace(/[^a-zA-Z0-9_\-]/g, "");
+		const cmdKey = `docker:${action}`;
 
-		const result = await runAsync(cmd, 30000);
+		const result = await runAsync(cmdKey, [sanitized], 30000);
 
 		return new Response(
 			JSON.stringify({ ok: result.ok, message: result.stdout || result.stderr }),
 			{ status: result.ok ? 200 : 500, headers: { "Content-Type": "application/json" } }
 		);
-	} catch (err: any) {
-		return new Response(JSON.stringify({ error: err.message }), { status: 500 });
+	} catch {
+		return new Response(JSON.stringify({ error: "Internal server error" }), { status: 500 });
 	}
 };

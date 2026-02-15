@@ -16,11 +16,11 @@ export const GET: APIRoute = async ({ cookies, url }) => {
 		return new Response(JSON.stringify({ error: "Missing container id" }), { status: 400 });
 	}
 
-	const sanitized = id.replace(/[^a-zA-Z0-9_\-\.]/g, "");
-	const result = runSync(`docker logs --tail ${Math.min(tail, 500)} ${sanitized}`, 10000);
+	const sanitized = id.replace(/[^a-zA-Z0-9_\-]/g, "");
+	const result = runSync("docker:logs", ["--tail", String(Math.min(tail, 500)), sanitized], 10000);
 
 	return new Response(
-		JSON.stringify({ logs: result.stdout || result.stderr || "No logs available" }),
+		JSON.stringify({ logs: result.stdout || (result.ok ? "No logs available" : "No logs available") }),
 		{ status: 200, headers: { "Content-Type": "application/json" } }
 	);
 };
