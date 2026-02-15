@@ -45,6 +45,11 @@ const COMMAND_REGISTRY: Record<string, CommandDef> = {
 	"systemctl:stop": { bin: "systemctl", args: ["stop"] },
 	"systemctl:restart": { bin: "systemctl", args: ["restart"] },
 
+	// Journalctl log reading
+	"journalctl:unit": { bin: "journalctl", args: ["-u"] },
+	"journalctl:unit-json": { bin: "journalctl", args: ["-u"] },
+	"systemctl:list-units": { bin: "systemctl", args: ["list-units", "--type=service", "--all", "--no-pager", "--plain"] },
+
 	// Docker read-only
 	"docker:ps": { bin: "docker", args: ["ps", "-a", "--format", "{{json .}}"] },
 	"docker:images": { bin: "docker", args: ["images", "--format", "{{json .}}"] },

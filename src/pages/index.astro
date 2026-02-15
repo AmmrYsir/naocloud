@@ -124,7 +124,7 @@ if (!user) return Astro.redirect("/login");
 						</div>
 					</a>
 					<a
-						href="/health"
+						href="/logs"
 						class="glass-card flex items-center gap-3 transition hover:border-accent/30"
 					>
 						<div
@@ -137,12 +137,15 @@ if (!user) return Astro.redirect("/login");
 								stroke="currentColor"
 								stroke-width="2"
 							>
-								<path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
+								<path
+									d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"
+								></path><path d="M14 2v6h6"></path><path
+									d="M16 13H8m8 4H8m2-8H8"></path>
 							</svg>
 						</div>
 						<div>
-							<p class="text-sm font-semibold">Health</p>
-							<p class="text-xs text-gray-500">System checks</p>
+							<p class="text-sm font-semibold">Logs</p>
+							<p class="text-xs text-gray-500">Service logs</p>
 						</div>
 					</a>
 				</div>

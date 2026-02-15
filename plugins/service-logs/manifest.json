@@ -1,0 +1,63 @@
+{
+	"id": "service-logs",
+	"name": "Service Logs Viewer",
+	"description": "View and search systemd/journalctl logs for services like Docker, Nginx, SSH, and more.",
+	"version": "1.0.0",
+	"author": "ServerPilot",
+	"icon": "📋",
+	"contributes": {
+		"navItems": [
+			{
+				"label": "Logs",
+				"href": "/logs",
+				"icon": "<svg class=\"h-5 w-5\" fill=\"none\" viewBox=\"0 0 24 24\" stroke=\"currentColor\" stroke-width=\"2\"><path d=\"M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z\"/><path d=\"M14 2v6h6\"/><path d=\"M16 13H8m8 4H8m2-8H8\"/></svg>"
+			}
+		],
+		"widgets": [
+			{
+				"key": "recent-logs",
+				"title": "Recent Service Logs",
+				"colSpan": 2,
+				"placement": "dashboard"
+			}
+		],
+		"apiRoutes": [
+			{
+				"method": "GET",
+				"path": "/services",
+				"auth": true
+			},
+			{
+				"method": "GET",
+				"path": "/entries",
+				"auth": true
+			}
+		],
+		"settings": {
+			"title": "Service Logs Settings",
+			"fields": [
+				{
+					"key": "defaultServices",
+					"label": "Default Services",
+					"type": "text",
+					"default": "docker,nginx,sshd,cron",
+					"description": "Comma-separated list of systemd services to show by default"
+				},
+				{
+					"key": "defaultLines",
+					"label": "Default Lines to Show",
+					"type": "number",
+					"default": 100,
+					"description": "Number of log lines to fetch per request"
+				},
+				{
+					"key": "refreshInterval",
+					"label": "Auto-refresh Interval (seconds)",
+					"type": "number",
+					"default": 10,
+					"description": "How often to refresh logs (0 to disable)"
+				}
+			]
+		}
+	}
+}

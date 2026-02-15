@@ -145,6 +145,7 @@ const READ_ONLY_KEYS = new Set([
 	"lscpu", "free", "df", "timedatectl",
 	"docker:ps", "docker:images", "docker:volumes", "docker:networks", "docker:logs",
 	"systemctl:is-active", "systemctl:status",
+	"journalctl:unit", "journalctl:unit-json", "systemctl:list-units",
 ]);
 
 function isReadOnlyCommand(key: string): boolean {
