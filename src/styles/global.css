@@ -1,0 +1,64 @@
+@import "tailwindcss";
+
+/* ── Custom Theme Tokens ── */
+@theme {
+	--color-panel: oklch(0.2 0.01 260);
+	--color-panel-light: oklch(0.97 0.005 260);
+	--color-surface: oklch(0.15 0.01 260);
+	--color-surface-light: oklch(1 0 0);
+	--color-border-dim: oklch(0.3 0.01 260);
+	--color-border-dim-light: oklch(0.88 0.005 260);
+	--color-glass: oklch(0.18 0.01 260 / 0.7);
+	--color-glass-light: oklch(1 0 0 / 0.7);
+	--color-accent: oklch(0.65 0.2 250);
+}
+
+/* ── Base ── */
+@layer base {
+	html {
+		@apply scroll-smooth;
+	}
+
+	body {
+		@apply min-h-screen font-sans antialiased transition-colors duration-200;
+	}
+
+	/* Dark mode (default) */
+	body {
+		@apply bg-surface text-gray-100;
+	}
+
+	/* Light mode */
+	body.light {
+		@apply bg-surface-light text-gray-900;
+	}
+}
+
+/* ── Glassmorphism Card ── */
+@layer components {
+	.glass-card {
+		@apply rounded-2xl border border-border-dim bg-glass p-5 shadow-lg shadow-black/10 backdrop-blur-xl;
+	}
+
+	body.light .glass-card {
+		@apply border-border-dim-light bg-glass-light shadow-gray-200/40;
+	}
+}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar {
+	width: 6px;
+	height: 6px;
+}
+
+::-webkit-scrollbar-track {
+	background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+	@apply rounded-full bg-gray-600;
+}
+
+body.light ::-webkit-scrollbar-thumb {
+	@apply bg-gray-300;
+}

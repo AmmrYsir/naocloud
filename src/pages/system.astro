@@ -1,0 +1,147 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import Navbar from "../components/Navbar.astro";
+import Sidebar from "../components/Sidebar.astro";
+import StatCard from "../components/StatCard.astro";
+import { getUserFromCookies } from "../lib/auth";
+import { runSync } from "../lib/exec";
+
+const user = getUserFromCookies(Astro.cookies);
+if (!user) return Astro.redirect("/login");
+
+// Fetch system info at page load (SSR)
+let sysInfo: Record<string, string> = {};
+try {
+	const hostname = runSync("hostname");
+	const kernel = runSync("uname -r");
+	const os = runSync("cat /proc/version");
+	const cpuInfo = runSync("lscpu");
+	const uptime = runSync("uptime -p");
+
+	sysInfo = {
+		hostname: hostname.stdout || "Unknown",
+		kernel: kernel.stdout || "Unknown",
+		os: os.stdout?.split("(")[0]?.trim() || "Unknown",
+		uptime: uptime.stdout?.replace("up ", "") || "Unknown",
+	};
+
+	// Parse lscpu
+	const cpuLines = cpuInfo.stdout.split("\n");
+	for (const line of cpuLines) {
+		const [key, val] = line.split(":").map((s) => s.trim());
+		if (key === "Model name") sysInfo.cpuModel = val;
+		if (key === "CPU(s)") sysInfo.cpuCores = val;
+		if (key === "Architecture") sysInfo.arch = val;
+	}
+} catch {
+	// Running on non-Linux or commands unavailable
+	sysInfo = {
+		hostname: "localhost",
+		kernel: "N/A (non-Linux)",
+		os: "N/A",
+		uptime: "N/A",
+		cpuModel: "N/A",
+		cpuCores: "N/A",
+		arch: "N/A",
+	};
+}
+---
+
+<BaseLayout title="System – ServerPilot">
+	<Sidebar />
+	<div class="flex flex-1 flex-col md:ml-64">
+		<Navbar username={user.username} />
+
+		<main class="flex-1 p-4 pb-20 md:p-6 md:pb-6">
+			<div class="mb-6">
+				<h1 class="text-2xl font-bold tracking-tight">System</h1>
+				<p class="mt-1 text-sm text-gray-500">
+					Server hardware and OS information
+				</p>
+			</div>
+
+			<!-- System Info Cards -->
+			<div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+				<StatCard
+					label="Hostname"
+					value={sysInfo.hostname}
+					color="blue"
+					icon={`<svg class="h-5 w-5 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8m-4-4v4"/></svg>`}
+				/>
+				<StatCard
+					label="Kernel"
+					value={sysInfo.kernel}
+					color="purple"
+					icon={`<svg class="h-5 w-5 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>`}
+				/>
+				<StatCard
+					label="Architecture"
+					value={sysInfo.arch || "N/A"}
+					color="cyan"
+					icon={`<svg class="h-5 w-5 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M9 1v3m6-3v3M9 20v3m6-3v3M1 9h3m-3 6h3M20 9h3m-3 6h3"/></svg>`}
+				/>
+				<StatCard
+					label="CPU Model"
+					value={sysInfo.cpuModel || "N/A"}
+					color="blue"
+					icon={`<svg class="h-5 w-5 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M9 9h6v6H9z"/></svg>`}
+				/>
+				<StatCard
+					label="CPU Cores"
+					value={sysInfo.cpuCores || "N/A"}
+					color="emerald"
+					icon={`<svg class="h-5 w-5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v4m0 14v4M4.22 4.22l2.83 2.83m9.9 9.9 2.83 2.83M1 12h4m14 0h4M4.22 19.78l2.83-2.83m9.9-9.9 2.83-2.83"/></svg>`}
+				/>
+				<StatCard
+					label="Uptime"
+					value={sysInfo.uptime}
+					color="yellow"
+					icon={`<svg class="h-5 w-5 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`}
+				/>
+			</div>
+
+			<!-- OS Info -->
+			<div class="mt-8">
+				<h2 class="mb-4 text-lg font-semibold">Operating System</h2>
+				<div class="glass-card">
+					<p class="text-sm text-gray-300 break-all">{sysInfo.os}</p>
+				</div>
+			</div>
+
+			<!-- System update actions -->
+			<div class="mt-8">
+				<h2 class="mb-4 text-lg font-semibold">Maintenance</h2>
+				<div
+					class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3"
+				>
+					<button
+						id="btn-update"
+						class="glass-card flex items-center gap-3 text-left transition hover:border-blue-500/30"
+					>
+						<div
+							class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-500/10"
+						>
+							<svg
+								class="h-5 w-5 text-blue-400"
+								fill="none"
+								viewBox="0 0 24 24"
+								stroke="currentColor"
+								stroke-width="2"
+							>
+								<path
+									d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+								></path>
+							</svg>
+						</div>
+						<div>
+							<p class="text-sm font-semibold">Update Packages</p>
+							<p class="text-xs text-gray-500">
+								apt update && apt upgrade
+							</p>
+						</div>
+					</button>
+				</div>
+			</div>
+		</main>
+	</div>
+</BaseLayout>

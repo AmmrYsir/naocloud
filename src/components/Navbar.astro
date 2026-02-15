@@ -1,0 +1,113 @@
+---
+/**
+ * Navbar.astro – Top navigation bar with branding, theme toggle, and user controls.
+ */
+interface Props {
+	username?: string;
+}
+const { username = "admin" } = Astro.props;
+---
+
+<nav
+	class="glass-card !rounded-none sticky top-0 z-50 flex items-center justify-between border-b border-border-dim px-4 py-3 md:px-6 !bg-panel/80 backdrop-blur-xl"
+>
+	<!-- Logo / Brand -->
+	<div class="flex items-center gap-3">
+		<div
+			class="flex h-9 w-9 items-center justify-center rounded-xl bg-accent text-white font-bold text-sm"
+		>
+			SP
+		</div>
+		<span class="hidden text-lg font-semibold tracking-tight sm:inline"
+			>ServerPilot</span
+		>
+	</div>
+
+	<!-- Right controls -->
+	<div class="flex items-center gap-3">
+		<!-- Theme toggle -->
+		<button
+			id="theme-toggle"
+			class="flex h-9 w-9 items-center justify-center rounded-xl text-gray-400 transition hover:bg-white/10 hover:text-white"
+			aria-label="Toggle theme"
+		>
+			<!-- Sun icon (shown in dark mode) -->
+			<svg
+				id="icon-sun"
+				class="h-5 w-5"
+				fill="none"
+				viewBox="0 0 24 24"
+				stroke="currentColor"
+				stroke-width="2"
+			>
+				<circle cx="12" cy="12" r="5"></circle><path
+					d="M12 1v2m0 18v2M4.22 4.22l1.42 1.42m12.72 12.72 1.42 1.42M1 12h2m18 0h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"
+				></path>
+			</svg>
+			<!-- Moon icon (shown in light mode) -->
+			<svg
+				id="icon-moon"
+				class="hidden h-5 w-5"
+				fill="none"
+				viewBox="0 0 24 24"
+				stroke="currentColor"
+				stroke-width="2"
+			>
+				<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"
+				></path>
+			</svg>
+		</button>
+
+		<!-- User badge -->
+		<div
+			class="flex items-center gap-2 rounded-xl bg-white/5 px-3 py-1.5 text-sm"
+		>
+			<div
+				class="h-6 w-6 rounded-full bg-accent/30 flex items-center justify-center text-xs font-bold text-accent"
+			>
+				{username[0].toUpperCase()}
+			</div>
+			<span class="hidden sm:inline text-gray-300">{username}</span>
+		</div>
+
+		<!-- Logout -->
+		<a
+			href="/api/auth/logout"
+			class="flex h-9 w-9 items-center justify-center rounded-xl text-gray-400 transition hover:bg-red-500/20 hover:text-red-400"
+			aria-label="Logout"
+		>
+			<svg
+				class="h-5 w-5"
+				fill="none"
+				viewBox="0 0 24 24"
+				stroke="currentColor"
+				stroke-width="2"
+			>
+				<path
+					d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4m7 14 5-5-5-5m5 5H9"
+				></path>
+			</svg>
+		</a>
+	</div>
+</nav>
+
+<script>
+	const btn = document.getElementById("theme-toggle")!;
+	const iconSun = document.getElementById("icon-sun")!;
+	const iconMoon = document.getElementById("icon-moon")!;
+
+	function applyThemeIcons() {
+		const isLight = document.body.classList.contains("light");
+		iconSun.classList.toggle("hidden", isLight);
+		iconMoon.classList.toggle("hidden", !isLight);
+	}
+
+	applyThemeIcons();
+
+	btn.addEventListener("click", () => {
+		document.body.classList.toggle("light");
+		const isLight = document.body.classList.contains("light");
+		localStorage.setItem("sp-theme", isLight ? "light" : "dark");
+		applyThemeIcons();
+	});
+</script>

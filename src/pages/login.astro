@@ -1,0 +1,119 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+---
+
+<BaseLayout title="Login – ServerPilot">
+	<div class="flex min-h-screen w-full items-center justify-center p-4">
+		<div class="w-full max-w-sm">
+			<!-- Logo -->
+			<div class="mb-8 text-center">
+				<div
+					class="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-accent text-2xl font-bold text-white shadow-lg shadow-accent/20"
+				>
+					SP
+				</div>
+				<h1 class="mt-4 text-2xl font-bold tracking-tight">
+					ServerPilot
+				</h1>
+				<p class="mt-1 text-sm text-gray-500">
+					Sign in to your dashboard
+				</p>
+			</div>
+
+			<!-- Login form -->
+			<form id="login-form" class="glass-card space-y-4">
+				<div
+					id="error-msg"
+					class="hidden rounded-xl bg-red-500/10 border border-red-500/30 p-3 text-sm text-red-400"
+				>
+				</div>
+
+				<div>
+					<label
+						for="username"
+						class="block text-sm font-medium text-gray-300"
+						>Username</label
+					>
+					<input
+						type="text"
+						id="username"
+						name="username"
+						required
+						autocomplete="username"
+						placeholder="admin"
+						class="mt-1 w-full rounded-xl border border-border-dim bg-white/5 px-4 py-2.5 text-sm text-gray-200 placeholder-gray-600 outline-none transition focus:border-accent/50 focus:ring-1 focus:ring-accent/30"
+					/>
+				</div>
+				<div>
+					<label
+						for="password"
+						class="block text-sm font-medium text-gray-300"
+						>Password</label
+					>
+					<input
+						type="password"
+						id="password"
+						name="password"
+						required
+						autocomplete="current-password"
+						placeholder="••••••••"
+						class="mt-1 w-full rounded-xl border border-border-dim bg-white/5 px-4 py-2.5 text-sm text-gray-200 placeholder-gray-600 outline-none transition focus:border-accent/50 focus:ring-1 focus:ring-accent/30"
+					/>
+				</div>
+				<button
+					type="submit"
+					id="login-btn"
+					class="w-full rounded-xl bg-accent py-2.5 text-sm font-semibold text-white transition hover:bg-accent/80 disabled:opacity-50"
+				>
+					Sign In
+				</button>
+			</form>
+
+			<p class="mt-4 text-center text-xs text-gray-600">
+				Default: admin / admin
+			</p>
+		</div>
+	</div>
+</BaseLayout>
+
+<script>
+	const form = document.getElementById("login-form") as HTMLFormElement;
+	const errorMsg = document.getElementById("error-msg")!;
+	const loginBtn = document.getElementById("login-btn") as HTMLButtonElement;
+
+	form.addEventListener("submit", async (e) => {
+		e.preventDefault();
+		errorMsg.classList.add("hidden");
+		loginBtn.disabled = true;
+		loginBtn.textContent = "Signing in...";
+
+		const username = (
+			document.getElementById("username") as HTMLInputElement
+		).value;
+		const password = (
+			document.getElementById("password") as HTMLInputElement
+		).value;
+
+		try {
+			const res = await fetch("/api/auth/login", {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({ username, password }),
+			});
+
+			if (res.ok) {
+				window.location.href = "/";
+			} else {
+				const data = await res.json().catch(() => ({}));
+				errorMsg.textContent = data.error || "Invalid credentials";
+				errorMsg.classList.remove("hidden");
+			}
+		} catch {
+			errorMsg.textContent = "Network error. Please try again.";
+			errorMsg.classList.remove("hidden");
+		} finally {
+			loginBtn.disabled = false;
+			loginBtn.textContent = "Sign In";
+		}
+	});
+</script>
