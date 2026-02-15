@@ -33,7 +33,7 @@ export interface User {
 /* Pre-computed bcrypt hash for default "admin" password.
  * Generated with: bcrypt.hashSync("admin", 10)
  * This avoids blocking the event loop on module load. */
-const ADMIN_HASH = "$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy";
+const ADMIN_HASH = "$2b$10$EsnaG0qPfjmctTUy2CZoAOL7DSFuGPnfjeJ486dY/iUaVWPH23hru";
 
 /* Default admin account – in production, store hashed passwords in a config file */
 const DEFAULT_USERS: Array<{ username: string; hash: string; role: "admin" | "viewer" }> = [
