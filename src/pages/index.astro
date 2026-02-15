@@ -123,7 +123,10 @@ if (!user) return Astro.redirect("/login");
 							<p class="text-xs text-gray-500">Configuration</p>
 						</div>
 					</a>
-					<div class="glass-card flex items-center gap-3 opacity-50">
+					<a
+						href="/health"
+						class="glass-card flex items-center gap-3 transition hover:border-accent/30"
+					>
 						<div
 							class="flex h-10 w-10 items-center justify-center rounded-xl bg-purple-500/10"
 						>
@@ -134,16 +137,14 @@ if (!user) return Astro.redirect("/login");
 								stroke="currentColor"
 								stroke-width="2"
 							>
-								<path
-									d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"
-								></path>
+								<path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
 							</svg>
 						</div>
 						<div>
-							<p class="text-sm font-semibold">Clustering</p>
-							<p class="text-xs text-gray-500">Coming soon</p>
+							<p class="text-sm font-semibold">Health</p>
+							<p class="text-xs text-gray-500">System checks</p>
 						</div>
-					</div>
+					</a>
 				</div>
 			</div>
 		</main>

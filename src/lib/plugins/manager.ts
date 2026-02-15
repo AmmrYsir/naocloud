@@ -357,7 +357,8 @@ export function getPluginNavItems(): Array<PluginNavItem & { pluginId: string }>
 		for (const nav of loaded.manifest.contributes?.navItems || []) {
 			items.push({
 				...nav,
-				href: `/plugins/${id}${nav.href}`,
+				// Use the href as-is — plugin authors define their own paths
+				href: nav.href,
 				pluginId: id,
 			});
 		}
