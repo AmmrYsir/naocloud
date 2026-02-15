@@ -5,7 +5,7 @@
 	--color-panel: oklch(0.2 0.01 260);
 	--color-panel-light: oklch(0.97 0.005 260);
 	--color-surface: oklch(0.15 0.01 260);
-	--color-surface-light: oklch(1 0 0);
+	--color-surface-light: oklch(0.96 0.005 260);
 	--color-border-dim: oklch(0.3 0.01 260);
 	--color-border-dim-light: oklch(0.88 0.005 260);
 	--color-glass: oklch(0.18 0.01 260 / 0.7);
@@ -26,11 +26,13 @@
 	/* Dark mode (default) */
 	body {
 		@apply bg-surface text-gray-100;
+		color-scheme: dark;
 	}
 
 	/* Light mode */
 	body.light {
 		@apply bg-surface-light text-gray-900;
+		color-scheme: light;
 	}
 }
 
@@ -42,6 +44,223 @@
 
 	body.light .glass-card {
 		@apply border-border-dim-light bg-glass-light shadow-gray-200/40;
+	}
+}
+
+/* ── Light-mode overrides for common text/surface patterns used in React components ── */
+@layer utilities {
+
+	/* ── Sidebar & Navbar ── */
+	body.light aside {
+		@apply bg-panel-light/80 border-r-border-dim-light;
+	}
+
+	body.light aside .border-t {
+		@apply border-t-border-dim-light;
+	}
+
+	body.light nav.fixed.bottom-0 {
+		@apply bg-panel-light/90 border-t-border-dim-light;
+	}
+
+	body.light aside a.text-gray-400,
+	body.light nav.fixed.bottom-0 a.text-gray-500 {
+		@apply text-gray-500;
+	}
+
+	body.light aside a.text-gray-400:hover {
+		@apply bg-gray-100 text-gray-800;
+	}
+
+	body.light aside .text-gray-500 {
+		@apply text-gray-400;
+	}
+
+	/* ── Top Navbar ── */
+	body.light nav.sticky.top-0 {
+		background: oklch(0.97 0.005 260 / 0.85) !important;
+		@apply border-b-border-dim-light;
+	}
+
+	body.light nav.sticky.top-0 .text-gray-300 {
+		@apply text-gray-700;
+	}
+
+	body.light nav.sticky.top-0 .text-gray-400 {
+		@apply text-gray-500;
+	}
+
+	body.light nav.sticky.top-0 .bg-white\/5 {
+		@apply bg-gray-100;
+	}
+
+	/* ── Headings & text ── */
+	body.light .text-white {
+		@apply !text-gray-900;
+	}
+
+	body.light .text-gray-100 {
+		@apply !text-gray-800;
+	}
+
+	body.light .text-gray-200 {
+		@apply !text-gray-700;
+	}
+
+	body.light .text-gray-300 {
+		@apply !text-gray-600;
+	}
+
+	body.light .text-gray-400 {
+		@apply !text-gray-500;
+	}
+
+	body.light .placeholder-gray-500::placeholder,
+	body.light .placeholder-gray-600::placeholder {
+		color: oklch(0.65 0 0);
+	}
+
+	/* ── Form inputs: select, input, textarea ── */
+	body.light select,
+	body.light input[type="text"],
+	body.light input[type="number"],
+	body.light input[type="password"],
+	body.light input[type="email"],
+	body.light textarea {
+		@apply !bg-gray-50 !border-gray-300 !text-gray-900;
+	}
+
+	body.light select:focus,
+	body.light input:focus,
+	body.light textarea:focus {
+		@apply !border-accent !ring-accent/30;
+	}
+
+	body.light select option {
+		@apply bg-white text-gray-900;
+	}
+
+	body.light optgroup {
+		@apply bg-white text-gray-900;
+	}
+
+	/* Checkbox overrides */
+	body.light input[type="checkbox"] {
+		@apply !bg-gray-100 !border-gray-300;
+	}
+
+	/* ── Surfaces with bg-white/5 or bg-white/10 ── */
+	body.light .bg-white\/5 {
+		@apply !bg-gray-100;
+	}
+
+	body.light .bg-white\/10 {
+		@apply !bg-gray-200;
+	}
+
+	/* ── Borders ── */
+	body.light .border-white\/10 {
+		@apply !border-gray-200;
+	}
+
+	body.light .border-white\/20 {
+		@apply !border-gray-300;
+	}
+
+	body.light .divide-white\/5> :not([hidden])~ :not([hidden]) {
+		@apply !border-gray-100;
+	}
+
+	/* ── Hover states ── */
+	body.light .hover\:bg-white\/5:hover {
+		@apply !bg-gray-100;
+	}
+
+	body.light .hover\:bg-white\/10:hover {
+		@apply !bg-gray-200;
+	}
+
+	body.light .hover\:text-white:hover {
+		@apply !text-gray-900;
+	}
+
+	body.light .hover\:text-gray-200:hover {
+		@apply !text-gray-800;
+	}
+
+	body.light .hover\:text-gray-300:hover {
+		@apply !text-gray-700;
+	}
+
+	/* ── Table header (sticky) ── */
+	body.light .bg-panel {
+		@apply !bg-panel-light;
+	}
+
+	body.light thead.sticky {
+		@apply !bg-gray-50 border-b-gray-200;
+	}
+
+	/* ── Row highlight ── */
+	body.light .hover\:bg-white\/5:hover {
+		@apply !bg-gray-50;
+	}
+
+	body.light .bg-red-500\/5 {
+		@apply !bg-red-50;
+	}
+
+	body.light .bg-amber-500\/5 {
+		@apply !bg-amber-50;
+	}
+
+	/* ── Code blocks ── */
+	body.light code {
+		@apply bg-gray-100 text-gray-800;
+	}
+
+	/* ── Search highlight ── */
+	body.light mark {
+		@apply !bg-accent/20 !text-gray-900;
+	}
+
+	/* ── Stats card icon backgrounds ── */
+	body.light .bg-blue-500\/10 {
+		@apply !bg-blue-50;
+	}
+
+	body.light .bg-purple-500\/10 {
+		@apply !bg-purple-50;
+	}
+
+	body.light .bg-emerald-500\/10,
+	body.light .bg-green-500\/10 {
+		@apply !bg-emerald-50;
+	}
+
+	body.light .bg-yellow-500\/10,
+	body.light .bg-orange-500\/10 {
+		@apply !bg-amber-50;
+	}
+
+	body.light .bg-red-500\/10 {
+		@apply !bg-red-50;
+	}
+
+	body.light .bg-amber-500\/10 {
+		@apply !bg-amber-50;
+	}
+
+	body.light .bg-cyan-500\/10 {
+		@apply !bg-cyan-50;
+	}
+
+	body.light .bg-accent\/20 {
+		@apply !bg-accent/10;
+	}
+
+	body.light .bg-accent\/30 {
+		@apply !bg-accent/15;
 	}
 }
 
