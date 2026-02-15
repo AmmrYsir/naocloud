@@ -11,9 +11,13 @@
  *   - Register plugin commands into exec.ts registry
  */
 
-import { existsSync, readFileSync, writeFileSync, readdirSync, mkdirSync } from "node:fs";
-import { join, resolve } from "node:path";
+import { existsSync, readFileSync, writeFileSync, readdirSync, mkdirSync, rmSync, renameSync, statSync } from "node:fs";
+import { join, resolve, basename } from "node:path";
 import { pathToFileURL } from "node:url";
+import { get as httpsGet } from "node:https";
+import { get as httpGet } from "node:http";
+import { pipeline } from "node:stream/promises";
+import { createWriteStream } from "node:fs";
 import type {
 	PluginManifest,
 	PluginInstance,
@@ -489,5 +493,306 @@ export async function routePluginApi(pluginId: string, method: string, path: str
 			status: 500,
 			headers: { "Content-Type": "application/json" },
 		});
+	}
+}
+
+/* ── Plugin Marketplace ── */
+
+// Bundled catalog ships with the source code (read-only)
+const CATALOG_BUNDLED_PATH = resolve(import.meta.dirname ?? ".", "catalog.json");
+// Remote catalog URL for updates (fetched at runtime)
+const CATALOG_REMOTE_URL = "https://raw.githubusercontent.com/AmmrYsir/naocloud/main/src/lib/plugins/catalog.json";
+// Runtime cache written to plugins/ dir so the source tree stays untouched
+const CATALOG_CACHE_PATH = join(PLUGINS_DIR, ".catalog-cache.json");
+
+interface PluginCatalogEntry {
+	id: string;
+	name: string;
+	description: string;
+	version: string;
+	author: string;
+	icon?: string;
+	category: string;
+	tags: string[];
+	repository: string;
+	downloadUrl: string;
+	homepage?: string;
+	license?: string;
+	screenshots?: string[];
+	installSize?: string;
+	downloads?: number;
+	rating?: number;
+	featured?: boolean;
+}
+
+interface PluginCatalog {
+	version: string;
+	updated: string;
+	plugins: PluginCatalogEntry[];
+	categories?: Array<{ id: string; label: string; icon?: string }>;
+}
+
+/**
+ * Read plugin catalog. Priority: remote (if forced) → runtime cache → bundled source copy.
+ * Remote fetches are cached to plugins/.catalog-cache.json so the source tree stays clean.
+ * @param forceRemote - Force fetch from remote URL instead of using cache
+ */
+export async function getPluginCatalog(forceRemote = false): Promise<PluginCatalog> {
+	// Try runtime cache first (unless forceRemote)
+	if (!forceRemote && existsSync(CATALOG_CACHE_PATH)) {
+		try {
+			const data = readFileSync(CATALOG_CACHE_PATH, "utf-8");
+			return JSON.parse(data);
+		} catch (err) {
+			console.error("[plugins] Failed to read catalog cache:", err);
+		}
+	}
+
+	// Try fetching from remote
+	try {
+		const response = await fetch(CATALOG_REMOTE_URL);
+		if (!response.ok) throw new Error(`HTTP ${response.status}`);
+		const catalog = await response.json() as PluginCatalog;
+		
+		// Cache to plugins/.catalog-cache.json (writable dir)
+		try {
+			ensurePluginsDir();
+			writeFileSync(CATALOG_CACHE_PATH, JSON.stringify(catalog, null, 2), "utf-8");
+		} catch {
+			// Ignore cache write errors
+		}
+		
+		return catalog;
+	} catch (err) {
+		console.error("[plugins] Failed to fetch remote catalog:", err);
+	}
+
+	// Fallback: runtime cache (may be stale but still valid)
+	if (existsSync(CATALOG_CACHE_PATH)) {
+		try {
+			const data = readFileSync(CATALOG_CACHE_PATH, "utf-8");
+			return JSON.parse(data);
+		} catch { /* ignore */ }
+	}
+
+	// Final fallback: bundled catalog from source tree
+	if (existsSync(CATALOG_BUNDLED_PATH)) {
+		try {
+			const data = readFileSync(CATALOG_BUNDLED_PATH, "utf-8");
+			return JSON.parse(data);
+		} catch { /* ignore */ }
+	}
+
+	// Return empty catalog as last resort
+	return { version: "0.0.0", updated: new Date().toISOString(), plugins: [] };
+}
+
+/**
+ * Check which catalog plugins are already installed.
+ */
+export function getInstalledPluginIds(): string[] {
+	return Array.from(loadedPlugins.keys());
+}
+
+/**
+ * Download a file from URL to destination path.
+ */
+async function downloadFile(url: string, destPath: string): Promise<void> {
+	return new Promise((resolvePromise, rejectPromise) => {
+		const file = createWriteStream(destPath);
+		const get = url.startsWith("https://") ? httpsGet : httpGet;
+		
+		get(url, (response) => {
+			// Handle redirects
+			if (response.statusCode === 301 || response.statusCode === 302) {
+				const redirectUrl = response.headers.location;
+				if (!redirectUrl) {
+					rejectPromise(new Error("Redirect without location"));
+					return;
+				}
+				downloadFile(redirectUrl, destPath).then(resolvePromise).catch(rejectPromise);
+				return;
+			}
+			
+			if (response.statusCode !== 200) {
+				rejectPromise(new Error(`HTTP ${response.statusCode}`));
+				return;
+			}
+			
+			response.pipe(file);
+			file.on("finish", () => {
+				file.close();
+				resolvePromise();
+			});
+			file.on("error", (err) => {
+				file.close();
+				rejectPromise(err);
+			});
+		}).on("error", rejectPromise);
+	});
+}
+
+/**
+ * Extract a ZIP file to destination directory.
+ * NOTE: Requires 'adm-zip' package. Install with: npm install adm-zip
+ */
+async function extractZip(zipPath: string, destDir: string): Promise<void> {
+	try {
+		// Dynamic import to avoid hard dependency
+		// @ts-ignore - adm-zip types may not be available
+		const AdmZip = (await import("adm-zip")).default;
+		const zip = new AdmZip(zipPath);
+		zip.extractAllTo(destDir, true);
+	} catch (err: any) {
+		if (err?.code === "ERR_MODULE_NOT_FOUND" || err?.message?.includes("Cannot find module")) {
+			throw new Error("ZIP extraction requires 'adm-zip' package. Install with: npm install adm-zip");
+		}
+		throw err;
+	}
+}
+
+/**
+ * Install a plugin from a download URL.
+ * @param pluginId - The plugin ID from the catalog
+ * @param downloadUrl - URL to the plugin ZIP file
+ * @returns Success status and error message if any
+ */
+export async function installPlugin(pluginId: string, downloadUrl: string): Promise<{ ok: boolean; error?: string; plugin?: PluginManifest }> {
+	console.log(`[plugins] Installing plugin "${pluginId}" from ${downloadUrl}`);
+	
+	// Check if already installed
+	if (loadedPlugins.has(pluginId)) {
+		return { ok: false, error: "Plugin already installed" };
+	}
+	
+	const tempDir = join(PLUGINS_DIR, `.temp-${pluginId}-${Date.now()}`);
+	const zipPath = join(tempDir, "plugin.zip");
+	const pluginDir = join(PLUGINS_DIR, pluginId);
+	
+	try {
+		// Create temp directory
+		mkdirSync(tempDir, { recursive: true });
+		
+		// Download the ZIP
+		console.log(`[plugins] Downloading from ${downloadUrl}...`);
+		await downloadFile(downloadUrl, zipPath);
+		
+		// Extract ZIP
+		console.log(`[plugins] Extracting...`);
+		await extractZip(zipPath, tempDir);
+		
+		// GitHub ZIP archives have a root folder like "plugin-name-main/"
+		// Find the actual plugin folder inside
+		const extracted = readdirSync(tempDir).filter(f => f !== "plugin.zip");
+		if (extracted.length === 0) {
+			throw new Error("Empty archive");
+		}
+		
+		// If there's a single folder, assume that's the plugin root
+		let pluginRoot = tempDir;
+		if (extracted.length === 1) {
+			const potentialRoot = join(tempDir, extracted[0]);
+			if (statSync(potentialRoot).isDirectory()) {
+				pluginRoot = potentialRoot;
+			}
+		}
+		
+		// Validate manifest exists
+		const manifestPath = join(pluginRoot, "manifest.json");
+		if (!existsSync(manifestPath)) {
+			throw new Error("No manifest.json found in plugin archive");
+		}
+		
+		// Read and validate manifest
+		const manifestData = readFileSync(manifestPath, "utf-8");
+		const manifest = JSON.parse(manifestData);
+		
+		if (!validateManifest(manifest, pluginId)) {
+			throw new Error("Invalid manifest or plugin ID mismatch");
+		}
+		
+		// Check if destination exists (shouldn't, but just in case)
+		if (existsSync(pluginDir)) {
+			throw new Error("Plugin directory already exists");
+		}
+		
+		// Move plugin to final destination
+		console.log(`[plugins] Installing to ${pluginDir}...`);
+		renameSync(pluginRoot, pluginDir);
+		
+		// Clean up temp directory
+		try {
+			rmSync(tempDir, { recursive: true, force: true });
+		} catch {
+			// Ignore cleanup errors
+		}
+		
+		// Add to registry (disabled by default)
+		const registryEntry: PluginRegistryEntry = {
+			id: pluginId,
+			enabled: false,
+			config: {},
+			installedAt: new Date().toISOString(),
+			version: manifest.version,
+		};
+		upsertRegistryEntry(registryEntry);
+		
+		// Load the plugin into memory
+		await loadPlugin(pluginId);
+		
+		console.log(`[plugins] Successfully installed "${manifest.name}" v${manifest.version}`);
+		
+		return { ok: true, plugin: manifest };
+		
+	} catch (err: any) {
+		console.error(`[plugins] Installation failed for "${pluginId}":`, err);
+		
+		// Clean up on failure
+		try {
+			if (existsSync(tempDir)) rmSync(tempDir, { recursive: true, force: true });
+			if (existsSync(pluginDir)) rmSync(pluginDir, { recursive: true, force: true });
+		} catch {
+			// Ignore cleanup errors
+		}
+		
+		return { ok: false, error: err.message || "Installation failed" };
+	}
+}
+
+/**
+ * Uninstall a plugin (removes from disk and registry).
+ */
+export async function uninstallPlugin(pluginId: string): Promise<{ ok: boolean; error?: string }> {
+	const loaded = loadedPlugins.get(pluginId);
+	if (!loaded) {
+		return { ok: false, error: "Plugin not found" };
+	}
+	
+	try {
+		// Disable first if enabled
+		if (loaded.registryEntry.enabled) {
+			await disablePlugin(pluginId);
+		}
+		
+		// Remove from loaded plugins map
+		loadedPlugins.delete(pluginId);
+		pluginStores.delete(pluginId);
+		
+		// Remove from registry
+		const entries = readRegistry().filter((e) => e.id !== pluginId);
+		writeRegistry(entries);
+		
+		// Remove from disk
+		const pluginDir = join(PLUGINS_DIR, pluginId);
+		if (existsSync(pluginDir)) {
+			rmSync(pluginDir, { recursive: true, force: true });
+		}
+		
+		console.log(`[plugins] Uninstalled "${pluginId}"`);
+		return { ok: true };
+		
+	} catch (err: any) {
+		console.error(`[plugins] Uninstall failed for "${pluginId}":`, err);
+		return { ok: false, error: err.message || "Uninstall failed" };
 	}
 }

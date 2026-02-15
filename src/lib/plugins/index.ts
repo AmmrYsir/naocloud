@@ -31,4 +31,8 @@ export {
 	getPluginComponentFile,
 	getPluginComponentForRoute,
 	routePluginApi,
+	getPluginCatalog,
+	getInstalledPluginIds,
+	installPlugin,
+	uninstallPlugin,
 } from "./manager";
