@@ -3,9 +3,12 @@
  *
  * Shows a small summary of recent log entries from configured services.
  * Designed for dashboard widget placement.
+ *
+ * Uses React from window.__SP_REACT__ (injected by PluginComponentLoader).
  */
 
-const { useState, useEffect, createElement: h } = await import("https://esm.sh/react@18");
+const React = window.__SP_REACT__;
+const { useState, useEffect, createElement: h } = React;
 
 export default function RecentLogsWidget() {
 	const [data, setData] = useState(null);

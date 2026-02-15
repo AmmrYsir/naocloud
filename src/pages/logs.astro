@@ -2,11 +2,15 @@
 import BaseLayout from "../layouts/BaseLayout.astro";
 import Navbar from "../components/Navbar.astro";
 import Sidebar from "../components/Sidebar.astro";
-import ServiceLogs from "../components/ServiceLogs.jsx";
+import PluginComponentLoader from "../components/PluginComponentLoader.jsx";
 import { getUserFromCookies } from "../lib/auth";
+import { getPluginComponentForRoute } from "../lib/plugins";
 
 const user = getUserFromCookies(Astro.cookies);
 if (!user) return Astro.redirect("/login");
+
+// Discover which plugin component is registered for the /logs route
+const pageComponent = getPluginComponentForRoute("/logs");
 ---
 
 <BaseLayout title="Service Logs – ServerPilot">
@@ -23,7 +27,28 @@ if (!user) return Astro.redirect("/login");
 				</p>
 			</div>
 
-			<ServiceLogs client:load />
+			{pageComponent ? (
+				<PluginComponentLoader
+					client:load
+					pluginId={pageComponent.pluginId}
+					componentKey={pageComponent.key}
+				/>
+			) : (
+				<div class="glass-card rounded-2xl p-8 text-center">
+					<div class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-white/5">
+						<svg class="h-8 w-8 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+							<path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+							<path d="M14 2v6h6" />
+							<path d="M16 13H8m8 4H8m2-8H8" />
+						</svg>
+					</div>
+					<h3 class="text-lg font-semibold text-gray-300">Logs plugin not available</h3>
+					<p class="mt-2 text-sm text-gray-500 max-w-md mx-auto">
+						The Service Logs plugin is not installed or enabled.
+						Visit <a href="/plugins" class="text-accent hover:underline">Plugins</a> to enable it.
+					</p>
+				</div>
+			)}
 		</main>
 	</div>
 </BaseLayout>
