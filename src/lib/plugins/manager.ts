@@ -21,6 +21,7 @@ import type {
 	PluginContext,
 	PluginNavItem,
 	PluginWidgetDecl,
+	PluginComponentDecl,
 } from "./types";
 import { runSync, runAsync, registerCommand, unregisterCommand } from "../exec";
 
@@ -258,7 +259,10 @@ export async function initPlugins(): Promise<void> {
 	}
 
 	const enabled = [...loadedPlugins.values()].filter((p) => p.registryEntry.enabled);
-	console.log(`[plugins] ${loadedPlugins.size} loaded, ${enabled.length} enabled`);
+	const componentCount = [...loadedPlugins.values()].reduce(
+		(sum, p) => sum + (p.manifest.contributes?.components?.length || 0), 0
+	);
+	console.log(`[plugins] ${loadedPlugins.size} loaded, ${enabled.length} enabled, ${componentCount} component(s) registered`);
 }
 
 /** Get all discovered plugins (both enabled and disabled). */
@@ -391,6 +395,80 @@ export async function getPluginWidgetData(pluginId: string, widgetKey: string): 
 		console.error(`[plugins] Error getting widget data for "${pluginId}:${widgetKey}":`, err);
 		return null;
 	}
+}
+
+/** Get all component declarations from enabled plugins. Optionally filter by component type. */
+export function getPluginComponents(type?: "page" | "widget" | "panel"): Array<PluginComponentDecl & { pluginId: string; pluginName: string; resolved: boolean }> {
+	const components: Array<PluginComponentDecl & { pluginId: string; pluginName: string; resolved: boolean }> = [];
+	for (const [id, loaded] of loadedPlugins) {
+		if (!loaded.registryEntry.enabled) continue;
+		for (const comp of loaded.manifest.contributes?.components || []) {
+			if (type && comp.type !== type) continue;
+			// Check if the component file actually exists on disk
+			const filePath = join(PLUGINS_DIR, id, comp.file);
+			const resolved = existsSync(filePath);
+			components.push({ ...comp, pluginId: id, pluginName: loaded.manifest.name, resolved });
+		}
+	}
+	return components;
+}
+
+/** Get all component declarations from ALL plugins (enabled and disabled), for admin UI. */
+export function getAllPluginComponents(): Array<PluginComponentDecl & { pluginId: string; pluginName: string; enabled: boolean; resolved: boolean }> {
+	const components: Array<PluginComponentDecl & { pluginId: string; pluginName: string; enabled: boolean; resolved: boolean }> = [];
+	for (const [id, loaded] of loadedPlugins) {
+		for (const comp of loaded.manifest.contributes?.components || []) {
+			const filePath = join(PLUGINS_DIR, id, comp.file);
+			const resolved = existsSync(filePath);
+			components.push({
+				...comp,
+				pluginId: id,
+				pluginName: loaded.manifest.name,
+				enabled: loaded.registryEntry.enabled,
+				resolved,
+			});
+		}
+	}
+	return components;
+}
+
+/** Read a plugin component's file content. Returns null if not found or not allowed. */
+export function getPluginComponentFile(pluginId: string, componentKey: string): { content: string; contentType: string } | null {
+	const loaded = loadedPlugins.get(pluginId);
+	if (!loaded?.registryEntry.enabled) return null;
+
+	const comp = loaded.manifest.contributes?.components?.find((c) => c.key === componentKey);
+	if (!comp) return null;
+
+	const filePath = join(PLUGINS_DIR, pluginId, comp.file);
+	// Security: ensure the resolved path is within the plugin directory
+	const pluginDir = join(PLUGINS_DIR, pluginId);
+	const resolvedPath = resolve(filePath);
+	if (!resolvedPath.startsWith(resolve(pluginDir))) return null;
+
+	if (!existsSync(resolvedPath)) return null;
+
+	try {
+		const content = readFileSync(resolvedPath, "utf-8");
+		const ext = resolvedPath.split(".").pop()?.toLowerCase();
+		const contentType = ext === "mjs" || ext === "js" ? "application/javascript" : "text/plain";
+		return { content, contentType };
+	} catch {
+		return null;
+	}
+}
+
+/** Get a component declaration for a specific route (for dynamic page rendering). */
+export function getPluginComponentForRoute(route: string): (PluginComponentDecl & { pluginId: string; pluginName: string }) | null {
+	for (const [id, loaded] of loadedPlugins) {
+		if (!loaded.registryEntry.enabled) continue;
+		for (const comp of loaded.manifest.contributes?.components || []) {
+			if (comp.type === "page" && comp.route === route) {
+				return { ...comp, pluginId: id, pluginName: loaded.manifest.name };
+			}
+		}
+	}
+	return null;
 }
 
 /** Route an API request to a plugin handler. Returns null if no handler found. */

@@ -1,16 +1,26 @@
 /**
  * PluginManager.jsx – Admin panel for managing plugins.
- * Lists installed plugins with enable/disable toggles and configuration UI.
+ * Lists installed plugins with enable/disable toggles, configuration UI,
+ * and component discovery/registration status.
  */
 import { useState, useEffect, useCallback } from "react";
+import { clearComponentCache } from "./PluginComponentLoader";
+
+/** Icon map for component types */
+const COMPONENT_TYPE_STYLES = {
+	page: { label: "Page", color: "text-sky-400 bg-sky-500/10", icon: "📄" },
+	widget: { label: "Widget", color: "text-violet-400 bg-violet-500/10", icon: "📊" },
+	panel: { label: "Panel", color: "text-teal-400 bg-teal-500/10", icon: "📋" },
+};
 
 export default function PluginManager() {
 	const [plugins, setPlugins] = useState([]);
 	const [loading, setLoading] = useState(true);
 	const [actionLoading, setActionLoading] = useState(null);
-	const [expandedPlugin, setExpandedPlugin] = useState(null);
+	const [expandedSection, setExpandedSection] = useState({}); // { [pluginId]: "settings" | "components" | null }
 	const [configValues, setConfigValues] = useState({});
 	const [toast, setToast] = useState(null);
+	const [componentRegistry, setComponentRegistry] = useState([]);
 
 	const fetchPlugins = useCallback(async () => {
 		try {
@@ -24,9 +34,20 @@ export default function PluginManager() {
 		}
 	}, []);
 
+	const fetchComponents = useCallback(async () => {
+		try {
+			const res = await fetch("/api/plugins/components?all=true", { credentials: "same-origin" });
+			const data = await res.json();
+			setComponentRegistry(Array.isArray(data) ? data : []);
+		} catch {
+			setComponentRegistry([]);
+		}
+	}, []);
+
 	useEffect(() => {
 		fetchPlugins();
-	}, [fetchPlugins]);
+		fetchComponents();
+	}, [fetchPlugins, fetchComponents]);
 
 	const showToast = (message, type = "success") => {
 		setToast({ message, type });
@@ -48,7 +69,8 @@ export default function PluginManager() {
 			const data = await res.json();
 			if (data.ok) {
 				showToast(data.message);
-				await fetchPlugins();
+				clearComponentCache();
+				await Promise.all([fetchPlugins(), fetchComponents()]);
 			} else {
 				showToast(data.error || "Failed", "error");
 			}
@@ -72,7 +94,7 @@ export default function PluginManager() {
 			const data = await res.json();
 			if (data.ok) {
 				showToast("Configuration saved");
-				await fetchPlugins();
+				await Promise.all([fetchPlugins(), fetchComponents()]);
 			} else {
 				showToast(data.error || "Failed", "error");
 			}
@@ -133,9 +155,11 @@ export default function PluginManager() {
 			<div className="grid gap-4">
 				{plugins.map((plugin) => {
 					const { manifest: m, enabled, config } = plugin;
-					const isExpanded = expandedPlugin === m.id;
 					const isLoading = actionLoading === m.id;
 					const hasSettings = m.contributes?.settings?.fields?.length > 0;
+					const hasComponents = m.contributes?.components?.length > 0;
+					const pluginComponents = componentRegistry.filter((c) => c.pluginId === m.id);
+					const activeSection = expandedSection[m.id] || null;
 
 					// Initialize config values from current config
 					if (!configValues[m.id] && config) {
@@ -144,6 +168,13 @@ export default function PluginManager() {
 							setConfigValues((prev) => ({ ...prev, [m.id]: { ...config } }));
 						}, 0);
 					}
+
+					const toggleSection = (section) => {
+						setExpandedSection((prev) => ({
+							...prev,
+							[m.id]: prev[m.id] === section ? null : section,
+						}));
+					};
 
 					return (
 						<div
@@ -168,11 +199,27 @@ export default function PluginManager() {
 								</div>
 
 								<div className="flex items-center gap-3 shrink-0">
+									{/* Components expand button */}
+									{hasComponents && (
+										<button
+											onClick={() => toggleSection("components")}
+											className={`flex h-8 w-8 items-center justify-center rounded-lg transition hover:bg-white/10 ${activeSection === "components" ? "text-accent bg-accent/10" : "text-gray-400 hover:text-white"}`}
+											title="Registered Components"
+										>
+											<svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+												<rect x="3" y="3" width="7" height="7" rx="1" />
+												<rect x="14" y="3" width="7" height="7" rx="1" />
+												<rect x="3" y="14" width="7" height="7" rx="1" />
+												<rect x="14" y="14" width="7" height="7" rx="1" />
+											</svg>
+										</button>
+									)}
+
 									{/* Settings expand button */}
 									{hasSettings && (
 										<button
-											onClick={() => setExpandedPlugin(isExpanded ? null : m.id)}
-											className="flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 transition hover:bg-white/10 hover:text-white"
+											onClick={() => toggleSection("settings")}
+											className={`flex h-8 w-8 items-center justify-center rounded-lg transition hover:bg-white/10 ${activeSection === "settings" ? "text-accent bg-accent/10" : "text-gray-400 hover:text-white"}`}
 											title="Settings"
 										>
 											<svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
@@ -219,10 +266,19 @@ export default function PluginManager() {
 										{m.contributes.commands.length} command{m.contributes.commands.length > 1 ? "s" : ""}
 									</span>
 								)}
+								{m.contributes?.components?.length > 0 && (
+									<span
+										className="rounded-md bg-cyan-500/10 px-2 py-0.5 text-[10px] font-medium text-cyan-400 cursor-pointer hover:bg-cyan-500/20 transition"
+										onClick={() => toggleSection("components")}
+										title="View registered components"
+									>
+										{m.contributes.components.length} component{m.contributes.components.length > 1 ? "s" : ""}
+									</span>
+								)}
 							</div>
 
 							{/* Settings panel */}
-							{isExpanded && hasSettings && (
+							{activeSection === "settings" && hasSettings && (
 								<div className="mt-4 border-t border-border-dim pt-4">
 									<h4 className="text-sm font-semibold text-gray-300 mb-3">
 										{m.contributes.settings.title}
@@ -287,6 +343,110 @@ export default function PluginManager() {
 									>
 										{isLoading ? "Saving..." : "Save Configuration"}
 									</button>
+								</div>
+							)}
+
+							{/* Components panel */}
+							{activeSection === "components" && hasComponents && (
+								<div className="mt-4 border-t border-border-dim pt-4">
+									<h4 className="text-sm font-semibold text-gray-300 mb-3 flex items-center gap-2">
+										<svg className="h-4 w-4 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+											<rect x="3" y="3" width="7" height="7" rx="1" />
+											<rect x="14" y="3" width="7" height="7" rx="1" />
+											<rect x="3" y="14" width="7" height="7" rx="1" />
+											<rect x="14" y="14" width="7" height="7" rx="1" />
+										</svg>
+										Registered Components
+									</h4>
+									<div className="space-y-2">
+										{m.contributes.components.map((comp) => {
+											const typeStyle = COMPONENT_TYPE_STYLES[comp.type] || COMPONENT_TYPE_STYLES.panel;
+											const regEntry = pluginComponents.find((c) => c.key === comp.key);
+											const isResolved = regEntry?.resolved ?? false;
+
+											return (
+												<div
+													key={comp.key}
+													className="flex items-center justify-between rounded-lg bg-white/5 border border-white/5 px-3 py-2.5"
+												>
+													<div className="flex items-center gap-3 min-w-0">
+														<span className="text-base shrink-0">{typeStyle.icon}</span>
+														<div className="min-w-0">
+															<div className="flex items-center gap-2">
+																<span className="text-sm font-medium text-white truncate">
+																	{comp.title || comp.key}
+																</span>
+																<span className={`inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-bold tracking-wider ${typeStyle.color}`}>
+																	{typeStyle.label}
+																</span>
+															</div>
+															{comp.description && (
+																<p className="text-xs text-gray-500 mt-0.5 truncate">
+																	{comp.description}
+																</p>
+															)}
+															<div className="flex items-center gap-2 mt-1">
+																<code className="text-[10px] text-gray-600 font-mono">
+																	{comp.file}
+																</code>
+																{comp.route && (
+																	<span className="text-[10px] text-gray-500">
+																		→ <code className="font-mono">{comp.route}</code>
+																	</span>
+																)}
+															</div>
+														</div>
+													</div>
+
+													<div className="flex items-center gap-2 shrink-0 ml-3">
+														{/* Resolution status */}
+														{enabled ? (
+															isResolved ? (
+																<span className="flex items-center gap-1 rounded-md bg-green-500/10 px-2 py-0.5 text-[10px] font-medium text-green-400" title="Component file found and registered">
+																	<svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
+																		<path d="M5 13l4 4L19 7" />
+																	</svg>
+																	Resolved
+																</span>
+															) : (
+																<span className="flex items-center gap-1 rounded-md bg-amber-500/10 px-2 py-0.5 text-[10px] font-medium text-amber-400" title="Component file not found">
+																	<svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
+																		<path d="M12 9v2m0 4h.01M12 3l9.5 16.5H2.5L12 3z" />
+																	</svg>
+																	Missing
+																</span>
+															)
+														) : (
+															<span className="rounded-md bg-white/5 px-2 py-0.5 text-[10px] font-medium text-gray-600">
+																Inactive
+															</span>
+														)}
+													</div>
+												</div>
+											);
+										})}
+									</div>
+
+									{/* Component summary */}
+									<div className="mt-3 flex items-center gap-3 text-[10px] text-gray-600">
+										<span>{m.contributes.components.length} declared</span>
+										{enabled && (
+											<>
+												<span>·</span>
+												<span className="text-green-500">
+													{pluginComponents.filter((c) => c.resolved).length} resolved
+												</span>
+												{pluginComponents.some((c) => !c.resolved) && (
+													<>
+														<span>·</span>
+														<span className="text-amber-500">
+															{pluginComponents.filter((c) => !c.resolved).length} missing
+														</span>
+													</>
+												)}
+											</>
+										)}
+									</div>
 								</div>
 							)}
 						</div>

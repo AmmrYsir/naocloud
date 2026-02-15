@@ -33,6 +33,23 @@
 				"auth": true
 			}
 		],
+		"components": [
+			{
+				"key": "log-viewer",
+				"file": "components/LogViewer.js",
+				"type": "page",
+				"route": "/logs",
+				"title": "Service Log Viewer",
+				"description": "Full-featured systemd journal log viewer with filtering, search, and auto-refresh"
+			},
+			{
+				"key": "recent-logs-widget",
+				"file": "components/RecentLogsWidget.js",
+				"type": "widget",
+				"title": "Recent Logs Widget",
+				"description": "Compact widget showing recent log entries for the dashboard"
+			}
+		],
 		"settings": {
 			"title": "Service Logs Settings",
 			"fields": [

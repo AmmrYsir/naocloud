@@ -11,6 +11,7 @@ export type {
 	PluginSettingsDecl,
 	PluginSettingsField,
 	PluginCommandDecl,
+	PluginComponentDecl,
 	PluginRegistryEntry,
 	PluginApiRouteDecl,
 } from "./types";
@@ -25,5 +26,9 @@ export {
 	getPluginNavItems,
 	getPluginWidgets,
 	getPluginWidgetData,
+	getPluginComponents,
+	getAllPluginComponents,
+	getPluginComponentFile,
+	getPluginComponentForRoute,
 	routePluginApi,
 } from "./manager";

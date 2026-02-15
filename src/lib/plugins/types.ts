@@ -37,6 +37,8 @@ export interface PluginManifest {
 		settings?: PluginSettingsDecl;
 		/** Additional exec commands the plugin needs registered. */
 		commands?: PluginCommandDecl[];
+		/** UI components contributed by this plugin (pages, widget renderers, panels). */
+		components?: PluginComponentDecl[];
 	};
 }
 
@@ -94,6 +96,23 @@ export interface PluginCommandDecl {
 	bin: string;
 	/** Fixed arguments. */
 	args: string[];
+}
+
+export interface PluginComponentDecl {
+	/** Unique component key within this plugin. */
+	key: string;
+	/** Relative path to the component file (pre-compiled JS/ESM). */
+	file: string;
+	/** Component type: "page" renders at a route, "widget" renders in a dashboard slot, "panel" renders in a collapsible section. */
+	type: "page" | "widget" | "panel";
+	/** For page components — the route path where the component is rendered (e.g. "/logs"). */
+	route?: string;
+	/** Display title. */
+	title?: string;
+	/** Short description. */
+	description?: string;
+	/** Default props passed to the component. */
+	defaultProps?: Record<string, any>;
 }
 
 /* ── Runtime types ── */
