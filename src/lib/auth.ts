@@ -1,22 +1,28 @@
 /**
  * auth.ts – JWT authentication helpers (server-side).
+ *
+ * JWT_SECRET is read from environment variables at runtime.
+ * Create a .env file in the project root:
+ *   JWT_SECRET=your-random-secret-here
  */
 
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import type { AstroCookies } from "astro";
 
-const JWT_SECRET = import.meta.env.JWT_SECRET || "serverpilot-dev-secret-change-me";
+// Use process.env for runtime (Node adapter) with import.meta.env fallback for dev
+const JWT_SECRET = process.env.JWT_SECRET || import.meta.env.JWT_SECRET || "serverpilot-dev-secret-change-me";
 const TOKEN_COOKIE = "sp_token";
 const TOKEN_EXPIRY = "24h";
 
-// Startup validation: warn loudly if using default secret
+// Startup validation: refuse to run in production without a real secret
 if (JWT_SECRET === "serverpilot-dev-secret-change-me") {
-	const env = import.meta.env.PROD ? "PRODUCTION" : "DEVELOPMENT";
 	if (import.meta.env.PROD) {
-		throw new Error("FATAL: JWT_SECRET must be set in production. Refusing to start with default secret.");
+		throw new Error(
+			"FATAL: JWT_SECRET is not set. Create a .env file with:\n  JWT_SECRET=your-random-secret-here\nOr set it as an environment variable before starting the server."
+		);
 	}
-	console.warn(`[AUTH] WARNING (${env}): Using default JWT_SECRET. Set JWT_SECRET env var before deploying.`);
+	console.warn("[AUTH] WARNING: Using default JWT_SECRET. Set JWT_SECRET in .env before deploying.");
 }
 
 export interface User {
