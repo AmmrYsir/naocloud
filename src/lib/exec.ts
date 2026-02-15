@@ -71,6 +71,21 @@ export interface ExecResult {
 }
 
 /**
+ * Register a new command at runtime (used by the plugin system).
+ * Plugins must namespace their keys: "pluginid:commandname"
+ */
+export function registerCommand(key: string, def: CommandDef): void {
+	COMMAND_REGISTRY[key] = def;
+}
+
+/**
+ * Unregister a command at runtime (used when disabling plugins).
+ */
+export function unregisterCommand(key: string): void {
+	delete COMMAND_REGISTRY[key];
+}
+
+/**
  * Run a registered command synchronously (blocking).
  * @param key - Registry key (e.g. "docker:ps", "free", "cat:proc/stat")
  * @param extraArgs - Additional arguments appended after the fixed args (already validated by caller)
