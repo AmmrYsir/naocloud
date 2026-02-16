@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* ── Scan plugin component files so their Tailwind classes are included ── */
+@source "../../plugins";
+
 /* ── Custom Theme Tokens ── */
 @theme {
 	--color-panel: oklch(0.2 0.01 260);
