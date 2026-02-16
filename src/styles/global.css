@@ -272,6 +272,45 @@
 	}
 }
 
+/* ── Custom Select (plugin dropdown) ── */
+
+/* Light-mode overrides for plugin CustomSelect component */
+body.light .cs-dropdown {
+	@apply !bg-white !border-gray-200 !shadow-gray-200/50;
+}
+
+body.light .cs-trigger {
+	@apply !bg-gray-50 !border-gray-300 !text-gray-900;
+}
+
+body.light .cs-trigger:hover {
+	@apply !border-gray-400;
+}
+
+body.light .cs-trigger:focus {
+	@apply !border-accent;
+}
+
+body.light .cs-group-label {
+	@apply !text-accent;
+}
+
+body.light .cs-divider {
+	@apply !border-gray-200;
+}
+
+body.light .cs-item {
+	@apply !text-gray-700;
+}
+
+body.light .cs-item:hover {
+	@apply !bg-gray-100 !text-gray-900;
+}
+
+body.light .cs-item.bg-accent\/15 {
+	@apply !bg-accent/10 !text-accent;
+}
+
 /* ── Scrollbar ── */
 ::-webkit-scrollbar {
 	width: 6px;
