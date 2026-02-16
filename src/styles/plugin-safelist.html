@@ -1,0 +1,239 @@
+<!--
+  Plugin Safelist – Tailwind v4 utility classes guaranteed to be available
+  for dynamically-loaded plugin components.
+
+  Tailwind scans this file via @source and generates CSS for every class
+  listed here, even if no other source file uses them. This ensures plugins
+  installed after `astro build` still have styling.
+
+  Plugin authors: only use classes listed here (or standard Tailwind classes
+  already used in the main app). If you need a class not listed, add it here
+  and rebuild.
+-->
+<div class="
+
+  <!-- ═══ LAYOUT ═══ -->
+  block inline-block inline flex inline-flex grid hidden
+  flex-row flex-col flex-wrap flex-nowrap flex-1
+  grid-cols-1 grid-cols-2 grid-cols-3 grid-cols-4 grid-cols-6 grid-cols-12
+  col-span-1 col-span-2 col-span-3 col-span-4 col-span-6 col-span-full
+  items-start items-center items-end items-stretch items-baseline
+  justify-start justify-center justify-end justify-between justify-around justify-evenly
+  self-start self-center self-end self-stretch
+  gap-0 gap-0.5 gap-1 gap-1.5 gap-2 gap-2.5 gap-3 gap-4 gap-5 gap-6 gap-8
+  space-x-1 space-x-2 space-x-3 space-x-4
+  space-y-0.5 space-y-1 space-y-1.5 space-y-2 space-y-2.5 space-y-3 space-y-4 space-y-5 space-y-6
+
+  <!-- ═══ SIZING ═══ -->
+  w-full w-auto w-0 w-1 w-2 w-3 w-4 w-5 w-6 w-7 w-8 w-9 w-10 w-12 w-14 w-16 w-20 w-24 w-32 w-40 w-48 w-56 w-64 w-72 w-80 w-96
+  w-1/2 w-1/3 w-2/3 w-1/4 w-3/4
+  h-auto h-full h-screen h-0 h-1 h-2 h-3 h-4 h-5 h-6 h-7 h-8 h-9 h-10 h-12 h-14 h-16 h-20 h-24 h-32 h-40 h-48 h-56 h-64
+  min-w-0 min-w-full
+  min-h-0 min-h-full min-h-screen
+  max-w-xs max-w-sm max-w-md max-w-lg max-w-xl max-w-2xl max-w-3xl max-w-4xl max-w-full max-w-none
+  max-h-48 max-h-64 max-h-80 max-h-96 max-h-screen
+  min-w-[60px] min-w-[80px] min-w-[100px] min-w-[120px] min-w-[150px] min-w-[200px]
+  max-h-[200px] max-h-[300px] max-h-[400px] max-h-[500px] max-h-[600px]
+  w-[38px] h-[38px]
+  shrink-0
+
+  <!-- ═══ SPACING (padding) ═══ -->
+  p-0 p-0.5 p-1 p-1.5 p-2 p-2.5 p-3 p-4 p-5 p-6 p-8 p-10 p-12
+  px-0 px-0.5 px-1 px-1.5 px-2 px-2.5 px-3 px-4 px-5 px-6 px-8
+  py-0 py-0.5 py-1 py-1.5 py-2 py-2.5 py-3 py-4 py-5 py-6 py-8 py-10 py-12
+  pt-0 pt-1 pt-2 pt-3 pt-4 pb-0 pb-1 pb-2 pb-3 pb-4
+  pl-0 pl-1 pl-2 pl-3 pl-4 pl-9 pr-0 pr-1 pr-2 pr-3 pr-4
+
+  <!-- ═══ SPACING (margin) ═══ -->
+  m-0 m-auto m-1 m-2 m-3 m-4
+  mx-auto mx-0 mx-1 mx-2 mx-3 mx-4
+  my-0 my-1 my-2 my-3 my-4
+  mt-0 mt-0.5 mt-1 mt-1.5 mt-2 mt-3 mt-4 mt-5 mt-6 mt-8
+  mb-0 mb-0.5 mb-1 mb-1.5 mb-2 mb-3 mb-4 mb-5 mb-6
+  ml-0 ml-1 ml-2 ml-3 ml-auto
+  mr-0 mr-1 mr-2 mr-3 mr-auto
+  -mt-1 -mt-2 -ml-1
+
+  <!-- ═══ TYPOGRAPHY ═══ -->
+  text-[10px] text-[11px] text-xs text-sm text-base text-lg text-xl text-2xl text-3xl
+  font-sans font-mono
+  font-normal font-medium font-semibold font-bold
+  leading-none leading-tight leading-snug leading-normal leading-relaxed
+  tracking-tight tracking-normal tracking-wide tracking-wider
+  text-left text-center text-right
+  uppercase lowercase capitalize normal-case
+  truncate line-clamp-1 line-clamp-2 line-clamp-3
+  whitespace-nowrap whitespace-pre whitespace-pre-wrap whitespace-normal
+  break-all break-words overflow-ellipsis
+  underline no-underline line-through
+  italic not-italic
+  antialiased
+
+  <!-- ═══ TEXT COLORS ═══ -->
+  text-white text-black text-transparent
+  text-gray-50 text-gray-100 text-gray-200 text-gray-300 text-gray-400 text-gray-500 text-gray-600 text-gray-700 text-gray-800 text-gray-900
+  text-red-300 text-red-400 text-red-500 text-red-600
+  text-orange-300 text-orange-400 text-orange-500
+  text-amber-300 text-amber-400 text-amber-500 text-amber-600
+  text-yellow-300 text-yellow-400 text-yellow-500
+  text-lime-400 text-lime-500
+  text-green-300 text-green-400 text-green-500 text-green-600
+  text-emerald-300 text-emerald-400 text-emerald-500
+  text-teal-300 text-teal-400 text-teal-500
+  text-cyan-300 text-cyan-400 text-cyan-500
+  text-sky-300 text-sky-400 text-sky-500
+  text-blue-300 text-blue-400 text-blue-500 text-blue-600
+  text-indigo-300 text-indigo-400 text-indigo-500
+  text-violet-300 text-violet-400 text-violet-500
+  text-purple-300 text-purple-400 text-purple-500
+  text-pink-300 text-pink-400 text-pink-500
+  text-rose-400 text-rose-500
+  text-accent
+
+  <!-- ═══ BACKGROUND COLORS ═══ -->
+  bg-transparent bg-white bg-black
+  bg-gray-50 bg-gray-100 bg-gray-200 bg-gray-300 bg-gray-400 bg-gray-500 bg-gray-600 bg-gray-700 bg-gray-800 bg-gray-900
+  bg-red-50 bg-red-500 bg-red-600 bg-red-700
+  bg-orange-50 bg-orange-500
+  bg-amber-50 bg-amber-500
+  bg-yellow-50 bg-yellow-500
+  bg-green-50 bg-green-500 bg-green-600
+  bg-emerald-50 bg-emerald-500
+  bg-teal-50 bg-teal-500
+  bg-cyan-50 bg-cyan-500
+  bg-sky-50 bg-sky-500
+  bg-blue-50 bg-blue-500 bg-blue-600
+  bg-indigo-50 bg-indigo-500
+  bg-violet-50 bg-violet-500
+  bg-purple-50 bg-purple-500
+  bg-pink-50 bg-pink-500
+  bg-accent
+
+  <!-- Opacity variants -->
+  bg-white/5 bg-white/10 bg-white/20 bg-white/30 bg-white/50
+  bg-black/5 bg-black/10 bg-black/20 bg-black/30 bg-black/50
+  bg-red-400/10 bg-red-500/5 bg-red-500/10 bg-red-500/20
+  bg-orange-500/10 bg-orange-500/20
+  bg-amber-400/10 bg-amber-500/5 bg-amber-500/10 bg-amber-500/20
+  bg-yellow-500/10 bg-yellow-500/20
+  bg-green-500/10 bg-green-500/20
+  bg-emerald-500/10 bg-emerald-500/20
+  bg-teal-500/10 bg-teal-500/20
+  bg-cyan-500/10 bg-cyan-500/20
+  bg-sky-500/10 bg-sky-500/20
+  bg-blue-500/10 bg-blue-500/20
+  bg-indigo-500/10
+  bg-violet-500/10 bg-violet-500/20
+  bg-purple-500/10 bg-purple-500/20
+  bg-pink-500/10
+  bg-gray-400/10 bg-gray-500/10 bg-gray-500/20
+  bg-accent/5 bg-accent/10 bg-accent/15 bg-accent/20 bg-accent/30
+
+  <!-- Theme tokens -->
+  bg-panel bg-panel-light bg-surface bg-surface-light bg-glass bg-glass-light
+
+  <!-- ═══ BORDER ═══ -->
+  border border-0 border-2 border-4
+  border-t border-b border-l border-r
+  border-transparent border-white border-black
+  border-white/10 border-white/20 border-white/30
+  border-gray-200 border-gray-300 border-gray-500 border-gray-600 border-gray-700 border-gray-800
+  border-red-500 border-red-500/20 border-red-500/30
+  border-amber-500/20 border-amber-500/30
+  border-green-500/20 border-green-500/30
+  border-blue-500/20 border-blue-500/30
+  border-accent border-accent/20 border-accent/30 border-accent/50
+  border-border-dim border-border-dim-light
+  divide-y divide-x
+  divide-white/5 divide-white/10 divide-gray-200
+
+  <!-- ═══ BORDER RADIUS ═══ -->
+  rounded-none rounded-sm rounded rounded-md rounded-lg rounded-xl rounded-2xl rounded-3xl rounded-full
+
+  <!-- ═══ SHADOW ═══ -->
+  shadow-none shadow-sm shadow shadow-md shadow-lg shadow-xl shadow-2xl
+  shadow-black/5 shadow-black/10 shadow-black/20
+  shadow-gray-200/40
+
+  <!-- ═══ OPACITY ═══ -->
+  opacity-0 opacity-5 opacity-10 opacity-20 opacity-25 opacity-30 opacity-40 opacity-50 opacity-60 opacity-70 opacity-75 opacity-80 opacity-90 opacity-100
+
+  <!-- ═══ POSITION ═══ -->
+  static relative absolute fixed sticky
+  inset-0 top-0 right-0 bottom-0 left-0
+  top-1/2 left-1/2 left-3
+  -translate-x-1/2 -translate-y-1/2
+  z-0 z-10 z-20 z-30 z-40 z-50
+
+  <!-- ═══ OVERFLOW ═══ -->
+  overflow-hidden overflow-auto overflow-x-auto overflow-y-auto overflow-x-hidden overflow-y-hidden overflow-visible overflow-scroll
+
+  <!-- ═══ CURSOR ═══ -->
+  cursor-pointer cursor-default cursor-not-allowed cursor-wait cursor-grab cursor-text
+
+  <!-- ═══ EFFECTS ═══ -->
+  backdrop-blur backdrop-blur-sm backdrop-blur-md backdrop-blur-lg backdrop-blur-xl backdrop-blur-2xl
+  blur blur-sm blur-md
+  transition transition-all transition-colors transition-opacity transition-transform
+  duration-100 duration-150 duration-200 duration-300 duration-500
+  ease-in ease-out ease-in-out
+  animate-spin animate-pulse animate-bounce
+  transform scale-95 scale-100 scale-105
+  rotate-0 rotate-45 rotate-90 rotate-180
+  translate-x-0 translate-x-0.5 translate-x-5.5
+
+  <!-- ═══ APPEARANCE ═══ -->
+  appearance-none outline-none ring-0 ring-1 ring-2
+  ring-accent ring-accent/30
+
+  <!-- ═══ INTERACTIVITY ═══ -->
+  select-none select-text select-all
+  pointer-events-none pointer-events-auto
+  touch-none
+
+  <!-- ═══ TABLE ═══ -->
+  table table-auto table-fixed border-collapse border-separate
+
+  <!-- ═══ SCROLL ═══ -->
+  scroll-smooth overscroll-contain
+
+  <!-- ═══ COMPONENT CLASSES ═══ -->
+  glass-card
+
+  <!-- ═══ HOVER STATES ═══ -->
+  hover:bg-white/5 hover:bg-white/10 hover:bg-white/20
+  hover:bg-gray-100 hover:bg-gray-200 hover:bg-gray-700 hover:bg-gray-800
+  hover:bg-accent hover:bg-accent/20 hover:bg-accent/30 hover:bg-accent/80
+  hover:bg-red-500/10 hover:bg-red-500/20
+  hover:bg-green-500/10
+  hover:bg-blue-500/10
+  hover:text-white hover:text-gray-100 hover:text-gray-200 hover:text-gray-300 hover:text-gray-800 hover:text-gray-900
+  hover:text-accent hover:text-red-400
+  hover:border-accent hover:border-white/20
+  hover:opacity-80 hover:opacity-100
+  hover:underline
+  hover:scale-105
+
+  <!-- ═══ FOCUS STATES ═══ -->
+  focus:outline-none focus:ring-0 focus:ring-1 focus:ring-2
+  focus:ring-accent focus:ring-accent/30
+  focus:border-accent focus:border-blue-500
+  focus:bg-white/10
+
+  <!-- ═══ DISABLED STATES ═══ -->
+  disabled:opacity-40 disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none
+
+  <!-- ═══ GROUP & PEER ═══ -->
+  group group-hover:opacity-100 group-hover:visible group-hover:text-white
+
+  <!-- ═══ DARK / RESPONSIVE PREFIXES ═══ -->
+  sm:grid-cols-2 sm:flex-row
+  md:grid-cols-2 md:grid-cols-3 md:flex-row
+  lg:grid-cols-3 lg:grid-cols-4
+
+  <!-- ═══ SVG ═══ -->
+  fill-none fill-current stroke-current
+
+  <!-- ═══ PLACEHOLDER ═══ -->
+  placeholder-gray-400 placeholder-gray-500 placeholder-gray-600
+"></div>
