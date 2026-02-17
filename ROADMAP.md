@@ -4,6 +4,22 @@ A prioritized checklist for future development. Check off items as they are comp
 
 ---
 
+## Phase 0: Module System (Foundation)
+
+- [x] Module type definitions (`src/modules/types.ts`)
+- [x] Module registry (`src/modules/registry.ts`)
+- [x] Module loader (`src/modules/loader.ts`)
+- [x] Core modules: System, Settings
+- [x] Nav items integration in Sidebar
+- [ ] **Module API routing** - `/api/modules/:moduleId/*`
+- [ ] **Widgets system** - Dashboard widgets from modules
+- [ ] **Settings integration** - Module settings in settings page
+- [ ] **External module support** - Load from `node_modules/serverpilot-module-*`
+- [ ] **Module sandboxing** - Command whitelist per module
+- [ ] **Docker module** - Migrate Docker as core module
+
+---
+
 ## Phase 1: Security Hardening (High Priority)
 
 ### Authentication & Authorization
@@ -236,6 +252,12 @@ A prioritized checklist for future development. Check off items as they are comp
 
 ## Completed Features
 
+- [x] **Module System** - Core/external module architecture with manifests
+- [x] Module loader (build-time discovery)
+- [x] Module registry
+- [x] Nav items integration from modules
+- [x] System module (as core module)
+- [x] Settings module (as core module)
 - [x] JWT authentication with rate limiting
 - [x] LAN-only access middleware
 - [x] Security headers (CSP, X-Frame-Options, etc.)

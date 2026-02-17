@@ -185,10 +185,76 @@ src/
 ├── components/     # React islands + Astro components
 ├── layouts/         # Astro layouts
 ├── lib/             # Shared utilities (auth, api, utils)
+├── modules/         # Module system
+│   ├── core/        # Built-in core modules
+│   │   ├── system/
+│   │   └── settings/
+│   ├── types.ts     # Module type definitions
+│   ├── registry.ts  # Module registry
+│   └── loader.ts    # Module loader
 ├── pages/           # Astro pages + API routes
 │   └── api/        # API endpoints
 └── styles/         # Global CSS + Tailwind
 ```
+
+## Module System
+
+ServerPilot uses a modular architecture. There are two types of modules:
+
+| Type | Description | Location |
+|------|-------------|----------|
+| **Core** | Built-in modules bundled with the app | `src/modules/core/` |
+| **External** | Third-party npm packages | `node_modules/serverpilot-module-*/` |
+
+### Creating a Core Module
+
+1. Create directory in `src/modules/core/<module-id>/`
+2. Create `manifest.ts` with module definition
+
+```typescript
+// src/modules/core/my-module/manifest.ts
+import type { ModuleManifest } from "../../types";
+
+const manifest: ModuleManifest = {
+  id: "my-module",
+  name: "My Module",
+  version: "1.0.0",
+  description: "Module description",
+  type: "core",
+  
+  navItems: [
+    { id: "my-module", label: "My Module", href: "/my-module", icon: "..." }
+  ],
+  
+  pages: [
+    { route: "/my-module", component: "./MyPage.astro", title: "My Module" }
+  ],
+  
+  apiRoutes: [
+    { path: "/data", method: "GET", handler: "./api/data.ts" }
+  ],
+};
+
+export default manifest;
+```
+
+### Module API Routes
+
+Module API endpoints are accessed at:
+```
+/api/modules/:moduleId/:path
+```
+
+Example: `/api/modules/settings/` or `/api/modules/system/info`
+
+### Module Types
+
+See `src/modules/types.ts` for complete type definitions:
+- `ModuleManifest` - Module configuration
+- `NavItem` - Navigation items
+- `ModulePage` - Page definitions
+- `ModuleWidget` - Dashboard widgets
+- `ModuleApiRoute` - API route definitions
 
 ## Adding New Features
 

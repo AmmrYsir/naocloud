@@ -1,12 +1,26 @@
 /**
- * Astro middleware – Security layer.
+ * Astro middleware – Security layer + module initialization.
  * - Enforces LAN-only access on API routes
  * - Adds security headers to all responses
+ * - Initializes the module system on first request
  */
 import { defineMiddleware } from "astro:middleware";
 import { isLocalNetwork } from "./lib/auth";
+import { initModules } from "./modules/loader";
+
+let modulesInitialized = false;
 
 export const onRequest = defineMiddleware(async ({ request, url, clientAddress }, next) => {
+	// ── Initialize modules once on first request ──
+	if (!modulesInitialized) {
+		modulesInitialized = true;
+		try {
+			await initModules();
+		} catch (err) {
+			console.error("[middleware] Module initialization failed:", err);
+		}
+	}
+
 	// ── LAN-only guard for API endpoints ──
 	if (url.pathname.startsWith("/api/")) {
 		const ip = clientAddress
