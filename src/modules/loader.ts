@@ -66,4 +66,4 @@ export async function initModules(): Promise<void> {
 /**
  * Get module system API for use in the application
  */
-export { getModule, getAllModules, getEnabledModules, getNavItems, getAllPages, getWidgets } from "./registry";
+export { getModule, getAllModules, getEnabledModules, getNavItems, getAllPages, getWidgets, setModuleEnabled } from "./registry";

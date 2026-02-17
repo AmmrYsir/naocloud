@@ -5,11 +5,13 @@
 import type { LoadedModule, ModuleManifest, NavItem, ModulePage, ModuleWidget } from "./types";
 
 const modules = new Map<string, LoadedModule>();
+const disabledModules = new Set<string>();
 
 export function registerModule(manifest: ModuleManifest): void {
+	const isDisabled = disabledModules.has(manifest.id);
 	const module: LoadedModule = {
 		manifest,
-		enabled: true,
+		enabled: !isDisabled,
 		loaded: true,
 	};
 
@@ -31,6 +33,19 @@ export function getAllModules(): LoadedModule[] {
 
 export function getEnabledModules(): LoadedModule[] {
 	return getAllModules().filter((m) => m.enabled);
+}
+
+export function setModuleEnabled(id: string, enabled: boolean): boolean {
+	const module = modules.get(id);
+	if (!module) return false;
+
+	if (enabled) {
+		disabledModules.delete(id);
+	} else {
+		disabledModules.add(id);
+	}
+	module.enabled = enabled;
+	return true;
 }
 
 export function getNavItems(): NavItem[] {
