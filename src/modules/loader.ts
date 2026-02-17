@@ -33,6 +33,14 @@ async function loadCoreModules(): Promise<void> {
 	} catch {
 		// Docker module not found - that's OK
 	}
+
+	// Load Service module
+	try {
+		const { default: serviceManifest } = await import("./core/service/manifest");
+		registerModule({ ...serviceManifest, id: "service", type: "core" });
+	} catch (err) {
+		console.error("[modules] Failed to load service module:", err);
+	}
 }
 
 /**

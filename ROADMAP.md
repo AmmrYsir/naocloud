@@ -67,6 +67,7 @@ A prioritized list of features to implement.
 - Docker images, volumes, networks
 - Container logs viewer
 - System stats (CPU, RAM, disk, uptime)
+- Service management module (start/stop/restart services, view logs, config)
 - Service control (systemd)
 - Settings export/import
 - Responsive mobile-first UI
