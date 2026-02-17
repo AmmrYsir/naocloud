@@ -39,6 +39,12 @@ export function setModuleEnabled(id: string, enabled: boolean): boolean {
 	const module = modules.get(id);
 	if (!module) return false;
 
+	// Check if module can be disabled
+	const canDisable = module.manifest.canDisable !== false;
+	if (!enabled && !canDisable) {
+		return false; // Cannot disable this module
+	}
+
 	if (enabled) {
 		disabledModules.delete(id);
 	} else {
@@ -46,6 +52,12 @@ export function setModuleEnabled(id: string, enabled: boolean): boolean {
 	}
 	module.enabled = enabled;
 	return true;
+}
+
+export function canDisableModule(id: string): boolean {
+	const module = modules.get(id);
+	if (!module) return false;
+	return module.manifest.canDisable !== false;
 }
 
 export function getNavItems(): NavItem[] {

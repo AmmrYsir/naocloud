@@ -9,10 +9,7 @@ A prioritized list of features to implement.
 ### Security
 
 - **2FA (TOTP)** - Two-factor authentication using authenticator apps
-- **RBAC** - Role-based access control with custom roles (admin, operator, viewer)
 - **API Key Management** - Generate API keys for programmatic access
-- **Audit Logging** - Log all admin actions with user, timestamp, IP
-- **User Management UI** - Add/edit/delete users, password change
 
 ### Docker Enhancements
 
@@ -57,18 +54,32 @@ A prioritized list of features to implement.
 
 ## Completed Features
 
+### Core System
 - Module System (core + external modules)
 - Module Management UI (enable/disable/install)
 - JWT Authentication with rate limiting
 - LAN-only access middleware
 - Security headers (CSP, X-Frame-Options)
 - Safe command execution (execFile)
+- Responsive mobile-first UI
+- Dark/light theme toggle
+
+### Security
+- **RBAC** - Role-based access control (admin, operator, viewer)
+- **User Management** - Add/edit/delete users with role assignment
+- **Audit Logging** - Log all admin actions with user, timestamp, IP
+- **Password Change** - Users can change their own passwords
+- Non-disableable security modules
+
+### Docker
 - Docker container management
 - Docker images, volumes, networks
 - Container logs viewer
+
+### System
 - System stats (CPU, RAM, disk, uptime)
 - Service management module (start/stop/restart services, view logs, config)
 - Service control (systemd)
+
+### Settings
 - Settings export/import
-- Responsive mobile-first UI
-- Dark/light theme toggle

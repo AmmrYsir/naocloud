@@ -71,6 +71,7 @@ export interface ModuleManifest {
 	description: string;
 	author?: string;
 	type: ModuleType;
+	canDisable?: boolean; // If false, module cannot be disabled (default: true for external, true for core)
 
 	navItems?: NavItem[];
 	pages?: ModulePage[];

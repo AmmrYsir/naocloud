@@ -7,8 +7,8 @@
  */
 
 import jwt from "jsonwebtoken";
-import bcrypt from "bcryptjs";
 import type { AstroCookies } from "astro";
+import { getUser, verifyPassword, updateLastLogin, type UserRole } from "./users";
 
 // Use process.env for runtime (Node adapter) with import.meta.env fallback for dev
 const JWT_SECRET = process.env.JWT_SECRET || import.meta.env.JWT_SECRET || "serverpilot-dev-secret-change-me";
@@ -27,28 +27,17 @@ if (JWT_SECRET === "serverpilot-dev-secret-change-me") {
 
 export interface User {
 	username: string;
-	role: "admin" | "viewer";
+	role: UserRole;
 }
-
-/* Pre-computed bcrypt hash for default "admin" password.
- * Generated with: bcrypt.hashSync("admin", 10)
- * This avoids blocking the event loop on module load. */
-const ADMIN_HASH = "$2b$10$EsnaG0qPfjmctTUy2CZoAOL7DSFuGPnfjeJ486dY/iUaVWPH23hru";
-
-/* Default admin account – in production, store hashed passwords in a config file */
-const DEFAULT_USERS: Array<{ username: string; hash: string; role: "admin" | "viewer" }> = [
-	{
-		username: "admin",
-		hash: ADMIN_HASH,
-		role: "admin",
-	},
-];
 
 /** Validate credentials & return JWT token. */
 export function authenticate(username: string, password: string): string | null {
-	const user = DEFAULT_USERS.find((u) => u.username === username);
+	const user = getUser(username);
 	if (!user) return null;
-	if (!bcrypt.compareSync(password, user.hash)) return null;
+	if (!verifyPassword(username, password)) return null;
+	
+	updateLastLogin(username);
+	
 	return jwt.sign({ username: user.username, role: user.role } satisfies User, JWT_SECRET, {
 		expiresIn: TOKEN_EXPIRY,
 	});

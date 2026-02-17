@@ -4,6 +4,7 @@
  */
 import type { APIRoute } from "astro";
 import { authenticate, TOKEN_COOKIE } from "../../../lib/auth";
+import { logAction } from "../../../lib/audit";
 
 /* ── Rate limiter ── */
 const RATE_LIMIT_WINDOW = 60_000; // 60 seconds
@@ -49,6 +50,7 @@ export const POST: APIRoute = async ({ request, cookies, clientAddress }) => {
 
 		const token = authenticate(username, password);
 		if (!token) {
+			logAction(username, "LOGIN_FAILED", "auth", "Invalid credentials", ip);
 			return new Response(JSON.stringify({ error: "Invalid credentials" }), { status: 401 });
 		}
 
@@ -59,6 +61,8 @@ export const POST: APIRoute = async ({ request, cookies, clientAddress }) => {
 			path: "/",
 			maxAge: 60 * 60 * 24, // 24h
 		});
+
+		logAction(username, "LOGIN", "auth", "User logged in", ip);
 
 		return new Response(JSON.stringify({ ok: true }), {
 			status: 200,

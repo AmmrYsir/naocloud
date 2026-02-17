@@ -1,0 +1,31 @@
+---
+/**
+ * users.astro – User management page
+ */
+import BaseLayout from "../layouts/BaseLayout.astro";
+import Navbar from "../components/Navbar.astro";
+import Sidebar from "../components/Sidebar.astro";
+import UserManager from "../components/UserManager";
+import { getUserFromCookies } from "../lib/auth";
+
+const user = getUserFromCookies(Astro.cookies);
+if (!user || user.role !== "admin") return Astro.redirect("/login");
+---
+
+<BaseLayout title="User Management – ServerPilot">
+	<Sidebar />
+	<div class="flex flex-1 flex-col md:ml-64">
+		<Navbar username={user.username} />
+
+		<main class="flex-1 p-4 pb-20 md:p-6 md:pb-6">
+			<div class="mb-6">
+				<h1 class="text-2xl font-bold tracking-tight">User Management</h1>
+				<p class="mt-1 text-sm text-gray-500">
+					Manage users and role-based access control
+				</p>
+			</div>
+
+			<UserManager client:load />
+		</main>
+	</div>
+</BaseLayout>

@@ -41,6 +41,22 @@ async function loadCoreModules(): Promise<void> {
 	} catch (err) {
 		console.error("[modules] Failed to load service module:", err);
 	}
+
+	// Load Security module (RBAC + User Management) - cannot be disabled
+	try {
+		const { default: securityManifest } = await import("./core/security/manifest");
+		registerModule({ ...securityManifest, id: "security", type: "core", canDisable: false });
+	} catch (err) {
+		console.error("[modules] Failed to load security module:", err);
+	}
+
+	// Load Audit module - cannot be disabled
+	try {
+		const { default: auditManifest } = await import("./core/audit/manifest");
+		registerModule({ ...auditManifest, id: "audit", type: "core", canDisable: false });
+	} catch (err) {
+		console.error("[modules] Failed to load audit module:", err);
+	}
 }
 
 /**
