@@ -2,7 +2,7 @@
 import BaseLayout from "../layouts/BaseLayout.astro";
 import Navbar from "../components/Navbar.astro";
 import Sidebar from "../components/Sidebar.astro";
-import DockerList from "../components/DockerList.jsx";
+import DockerManager from "../components/DockerManager.jsx";
 import { getUserFromCookies } from "../lib/auth";
 
 const user = getUserFromCookies(Astro.cookies);
@@ -18,11 +18,11 @@ if (!user) return Astro.redirect("/login");
 			<div class="mb-6">
 				<h1 class="text-2xl font-bold tracking-tight">Docker</h1>
 				<p class="mt-1 text-sm text-gray-500">
-					Manage containers, images, volumes, and networks
+					Manage containers, images, volumes, networks, and compose projects
 				</p>
 			</div>
 
-			<DockerList client:load />
+			<DockerManager client:load />
 		</main>
 	</div>
 </BaseLayout>

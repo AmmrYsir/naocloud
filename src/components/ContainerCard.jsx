@@ -1,15 +1,16 @@
 /**
- * ContainerCard.jsx – Interactive Docker container card (React island).
- * Displays container info and provides action buttons with confirmation.
+ * ContainerCard.jsx – Interactive Docker container card with resource management.
  */
 import { useState } from "react";
-import { containerAction } from "../lib/api";
 
-export default function ContainerCard({ container }) {
+export default function ContainerCard({ container, onRefresh }) {
 	const [loading, setLoading] = useState(false);
-	const [confirm, setConfirm] = useState(null); // "stop" | "remove" | null
+	const [confirm, setConfirm] = useState(null);
 	const [showLogs, setShowLogs] = useState(false);
 	const [logs, setLogs] = useState("");
+	const [showResources, setShowResources] = useState(false);
+	const [resources, setResources] = useState(null);
+	const [updatingResources, setUpdatingResources] = useState(false);
 
 	const name = container.Names?.[0]?.replace(/^\//, "") ?? container.Id?.slice(0, 12);
 	const image = container.Image ?? "unknown";
@@ -28,9 +29,15 @@ export default function ContainerCard({ container }) {
 		setLoading(true);
 		setConfirm(null);
 		try {
-			await containerAction(container.Id, action);
-			// Trigger page refresh to update list
-			window.location.reload();
+			const res = await fetch(`/api/docker/container/${container.Id}/action`, {
+				method: "POST",
+				credentials: "same-origin",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({ action }),
+			});
+			if (res.ok && onRefresh) {
+				onRefresh();
+			}
 		} catch (err) {
 			console.error(err);
 		} finally {
@@ -42,12 +49,56 @@ export default function ContainerCard({ container }) {
 		setShowLogs(!showLogs);
 		if (!showLogs) {
 			try {
-				const res = await fetch(`/api/docker/logs?id=${container.Id}&tail=50`);
+				const res = await fetch(`/api/docker/container/${container.Id}/logs?lines=50`);
 				const data = await res.json();
-				setLogs(data.logs ?? "No logs available");
+				setLogs(data.logs?.join("\n") ?? "No logs available");
 			} catch {
 				setLogs("Failed to fetch logs");
 			}
+		}
+	}
+
+	async function fetchResources() {
+		setShowResources(!showResources);
+		if (!showResources && !resources) {
+			try {
+				const res = await fetch(`/api/docker/container/${container.Id}/resources`);
+				const data = await res.json();
+				setResources(data);
+			} catch {
+				setResources({ error: "Failed to load resources" });
+			}
+		}
+	}
+
+	async function updateResources(e) {
+		e.preventDefault();
+		setUpdatingResources(true);
+		try {
+			const formData = new FormData(e.target);
+			const cpu = formData.get("cpu");
+			const memory = formData.get("memory");
+			
+			const res = await fetch(`/api/docker/container/${container.Id}/resources`, {
+				method: "POST",
+				credentials: "same-origin",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({
+					cpu: cpu ? parseFloat(cpu) : undefined,
+					memory: memory ? parseInt(memory) : undefined,
+				}),
+			});
+			
+			if (res.ok) {
+				alert("Resource limits updated successfully");
+				fetchResources();
+			} else {
+				alert("Failed to update resources");
+			}
+		} catch (err) {
+			alert(`Error: ${err.message}`);
+		} finally {
+			setUpdatingResources(false);
 		}
 	}
 
@@ -121,6 +172,12 @@ export default function ContainerCard({ container }) {
 				>
 					{showLogs ? "Hide Logs" : "Logs"}
 				</button>
+				<button
+					onClick={fetchResources}
+					className="rounded-lg bg-purple-500/10 px-3 py-1.5 text-xs font-medium text-purple-400 transition hover:bg-purple-500/20"
+				>
+					{showResources ? "Hide Resources" : "Resources"}
+				</button>
 			</div>
 
 			{/* Confirmation modal */}
@@ -152,6 +209,53 @@ export default function ContainerCard({ container }) {
 					<pre className="whitespace-pre-wrap text-[10px] leading-relaxed text-gray-400 font-mono">
 						{logs || "Loading..."}
 					</pre>
+				</div>
+			)}
+
+			{/* Resources panel */}
+			{showResources && (
+				<div className="mt-2 rounded-xl bg-purple-500/10 border border-purple-500/30 p-3">
+					{resources?.error ? (
+						<p className="text-xs text-red-400">{resources.error}</p>
+					) : resources ? (
+						<form onSubmit={updateResources} className="space-y-3">
+							<div>
+								<label className="block text-xs text-gray-400 mb-1">CPU Limit (cores)</label>
+								<input
+									type="number"
+									name="cpu"
+									step="0.1"
+									defaultValue={resources.limits?.cpu || ""}
+									placeholder="e.g., 1.5"
+									className="w-full bg-surface border border-border-dim rounded px-2 py-1 text-xs"
+								/>
+							</div>
+							<div>
+								<label className="block text-xs text-gray-400 mb-1">Memory Limit (bytes)</label>
+								<input
+									type="number"
+									name="memory"
+									defaultValue={resources.limits?.memory || ""}
+									placeholder="e.g., 536870912 (512MB)"
+									className="w-full bg-surface border border-border-dim rounded px-2 py-1 text-xs"
+								/>
+							</div>
+							{resources.stats && (
+								<div className="text-xs text-gray-500">
+									<p>Current Usage: {resources.stats}</p>
+								</div>
+							)}
+							<button
+								type="submit"
+								disabled={updatingResources}
+								className="w-full rounded-lg bg-purple-500/20 px-3 py-1.5 text-xs font-medium text-purple-400 transition hover:bg-purple-500/30 disabled:opacity-50"
+							>
+								{updatingResources ? "Updating..." : "Update Limits"}
+							</button>
+						</form>
+					) : (
+						<p className="text-xs text-gray-400">Loading...</p>
+					)}
 				</div>
 			)}
 		</div>
