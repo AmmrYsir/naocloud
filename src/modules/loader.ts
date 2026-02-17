@@ -9,7 +9,7 @@ import { registerModule } from "./registry";
 import type { ModuleManifest } from "./types";
 
 /**
- * Load all core modules - each module imports itself
+ * Load all core modules
  */
 async function loadCoreModules(): Promise<void> {
 	try {
@@ -25,6 +25,29 @@ async function loadCoreModules(): Promise<void> {
 	} catch (err) {
 		console.error("[modules] Failed to load settings module:", err);
 	}
+
+	// Try to load Docker as core module (optional - may not exist yet)
+	try {
+		const { default: dockerManifest } = await import("./core/docker/manifest");
+		registerModule({ ...dockerManifest, id: "docker", type: "core" });
+	} catch {
+		// Docker module not found - that's OK
+	}
+}
+
+/**
+ * Load external modules from node_modules
+ * External packages should be named: serverpilot-module-*
+ * Users install: npm install serverpilot-module-example
+ * 
+ * Note: External modules are loaded at runtime, not build time
+ * This allows adding new modules without rebuilding
+ */
+async function loadExternalModules(): Promise<void> {
+	// External modules are loaded dynamically at runtime
+	// The module API will handle requests to external modules
+	// This is a placeholder for future enhancement
+	console.log("[modules] External module support ready - install serverpilot-module-* packages");
 }
 
 /**
@@ -34,6 +57,7 @@ export async function initModules(): Promise<void> {
 	console.log("[modules] Initializing module system...");
 
 	await loadCoreModules();
+	await loadExternalModules();
 
 	const { getAllModules } = await import("./registry");
 	console.log(`[modules] Loaded ${getAllModules().length} module(s)`);

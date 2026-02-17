@@ -187,11 +187,13 @@ src/
 ├── lib/             # Shared utilities (auth, api, utils)
 ├── modules/         # Module system
 │   ├── core/        # Built-in core modules
+│   │   ├── docker/
 │   │   ├── system/
 │   │   └── settings/
 │   ├── types.ts     # Module type definitions
 │   ├── registry.ts  # Module registry
-│   └── loader.ts    # Module loader
+│   ├── loader.ts    # Module loader
+│   └── sandbox.ts   # Module sandbox utilities
 ├── pages/           # Astro pages + API routes
 │   └── api/        # API endpoints
 └── styles/         # Global CSS + Tailwind

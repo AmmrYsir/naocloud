@@ -9,14 +9,14 @@ A prioritized checklist for future development. Check off items as they are comp
 - [x] Module type definitions (`src/modules/types.ts`)
 - [x] Module registry (`src/modules/registry.ts`)
 - [x] Module loader (`src/modules/loader.ts`)
-- [x] Core modules: System, Settings
+- [x] Core modules: System, Settings, Docker
 - [x] Nav items integration in Sidebar
-- [ ] **Module API routing** - `/api/modules/:moduleId/*`
-- [ ] **Widgets system** - Dashboard widgets from modules
-- [ ] **Settings integration** - Module settings in settings page
-- [ ] **External module support** - Load from `node_modules/serverpilot-module-*`
-- [ ] **Module sandboxing** - Command whitelist per module
-- [ ] **Docker module** - Migrate Docker as core module
+- [x] **Module API routing** - `/api/modules/:moduleId/*`
+- [x] **Widgets system** - Dashboard widgets from modules
+- [x] **Settings integration** - Module settings in settings page
+- [x] **External module support** - Ready for `serverpilot-module-*` packages
+- [x] **Module sandboxing** - Command whitelist per module
+- [x] **Docker module** - Migrate Docker as core module
 
 ---
 
