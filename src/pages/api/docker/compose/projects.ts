@@ -24,8 +24,8 @@ export const GET: APIRoute = async ({ cookies }) => {
 	try {
 		// Get all running compose projects
 		const result = execFileSync(
-			"docker",
-			["compose", "ls", "--all", "--format", "json"],
+			"docker-compose",
+			["ls", "--all", "--format", "json"],
 			{ encoding: "utf-8", timeout: 30000 }
 		);
 
@@ -36,8 +36,8 @@ export const GET: APIRoute = async ({ cookies }) => {
 			try {
 				// Get services in this project
 				const configResult = execFileSync(
-					"docker",
-					["compose", "-p", project.name, "config", "--services"],
+					"docker-compose",
+					["-p", project.name, "config", "--services"],
 					{ encoding: "utf-8", timeout: 10000 }
 				);
 				project.services = configResult.trim().split("\n").filter(Boolean);

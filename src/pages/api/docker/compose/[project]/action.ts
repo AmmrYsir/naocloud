@@ -30,29 +30,29 @@ export const POST: APIRoute = async ({ cookies, params, request }) => {
 		switch (action) {
 			case "up":
 				result = execFileSync(
-					"docker",
-					["compose", "-p", project, "up", "-d"],
+					"docker-compose",
+					["-p", project, "up", "-d"],
 					{ encoding: "utf-8", timeout: 60000 }
 				);
 				break;
 			case "down":
 				result = execFileSync(
-					"docker",
-					["compose", "-p", project, "down"],
+					"docker-compose",
+					["-p", project, "down"],
 					{ encoding: "utf-8", timeout: 60000 }
 				);
 				break;
 			case "restart":
 				result = execFileSync(
-					"docker",
-					["compose", "-p", project, "restart"],
+					"docker-compose",
+					["-p", project, "restart"],
 					{ encoding: "utf-8", timeout: 60000 }
 				);
 				break;
 			case "pull":
 				result = execFileSync(
-					"docker",
-					["compose", "-p", project, "pull"],
+					"docker-compose",
+					["-p", project, "pull"],
 					{ encoding: "utf-8", timeout: 120000 }
 				);
 				break;
