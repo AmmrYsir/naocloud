@@ -18,6 +18,7 @@ interface ServiceLogs {
 export default function ServiceManager() {
 	const [services, setServices] = useState<Service[]>([]);
 	const [loading, setLoading] = useState(true);
+	const [error, setError] = useState<string | null>(null);
 	const [selectedService, setSelectedService] = useState<string | null>(null);
 	const [logs, setLogs] = useState<ServiceLogs | null>(null);
 	const [showLogs, setShowLogs] = useState(false);
@@ -34,6 +35,7 @@ export default function ServiceManager() {
 			setServices(data.services || []);
 		} catch (err) {
 			console.error("Failed to fetch services:", err);
+			setError("Failed to load services. This feature requires Linux with systemd.");
 		} finally {
 			setLoading(false);
 		}
@@ -84,6 +86,20 @@ export default function ServiceManager() {
 
 	return (
 		<div className="space-y-6">
+			{error && (
+				<div className="bg-amber-500/10 border border-amber-500/30 text-amber-400 px-4 py-3 rounded-lg">
+					<div className="flex items-center gap-2">
+						<svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+							<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+						</svg>
+						<span>{error}</span>
+					</div>
+					<p className="mt-2 text-sm text-amber-500/80">
+						Service management requires a Linux system with systemd. This feature is not available on Windows or macOS.
+					</p>
+				</div>
+			)}
+
 			{/* Service List */}
 			<div className="glass-card">
 				<h2 className="text-lg font-semibold text-white mb-4">System Services</h2>
@@ -150,6 +166,12 @@ export default function ServiceManager() {
 							</div>
 						</div>
 					))}
+					{services.length === 0 && !error && (
+						<div className="text-center py-8 text-gray-500">
+							<p>No services found.</p>
+							<p className="text-sm mt-1">Service management requires Linux with systemd.</p>
+						</div>
+					)}
 				</div>
 			</div>
 
