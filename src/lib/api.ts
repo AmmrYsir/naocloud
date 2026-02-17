@@ -72,13 +72,3 @@ export const updateSettings = (data: any) =>
 export const exportConfig = () => request("/api/settings/export");
 export const importConfig = (data: any) =>
 	request("/api/settings/import", { method: "POST", body: JSON.stringify(data) });
-
-/* ── Plugins ── */
-export const getPlugins = () => request("/api/plugins");
-export const pluginAction = (id: string, action: string, config?: any) =>
-	request("/api/plugins", {
-		method: "POST",
-		body: JSON.stringify({ id, action, config }),
-	});
-export const getPluginWidgets = (placement = "dashboard") =>
-	request(`/api/plugins/widgets?placement=${placement}`);

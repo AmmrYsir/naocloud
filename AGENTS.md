@@ -184,7 +184,7 @@ export function formatBytes(bytes: number, decimals = 1): string { ... }
 src/
 ├── components/     # React islands + Astro components
 ├── layouts/         # Astro layouts
-├── lib/             # Shared utilities (auth, api, utils, plugins)
+├── lib/             # Shared utilities (auth, api, utils)
 ├── pages/           # Astro pages + API routes
 │   └── api/        # API endpoints
 └── styles/         # Global CSS + Tailwind
@@ -196,18 +196,6 @@ src/
 2. **New page**: Add Astro file in `src/pages/`
 3. **New React component**: Add in `src/components/`
 4. **New utility**: Add to `src/lib/`
-5. **New plugin**: See Plugin Development section below
-
-### Plugin Development
-
-ServerPilot has a plugin system (`src/lib/plugins/`). To add a new plugin:
-
-1. Create plugin directory in `plugins/` with `manifest.json`
-2. Implement API routes in `src/pages/api/plugins/`
-3. Add nav items via `getPluginNavItems()` helper
-4. Add widgets via `src/pages/api/plugins/widgets.ts`
-
-See existing plugins in `plugins/` directory for examples.
 
 ## Security Guidelines
 

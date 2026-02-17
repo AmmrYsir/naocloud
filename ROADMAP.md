@@ -236,8 +236,6 @@ A prioritized checklist for future development. Check off items as they are comp
 
 ## Completed Features
 
-- [x] Plugin system with manifest.json
-- [x] System health monitoring plugin
 - [x] JWT authentication with rate limiting
 - [x] LAN-only access middleware
 - [x] Security headers (CSP, X-Frame-Options, etc.)

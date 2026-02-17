@@ -1,26 +1,12 @@
 /**
- * Astro middleware – Security layer + plugin initialization.
+ * Astro middleware – Security layer.
  * - Enforces LAN-only access on API routes
  * - Adds security headers to all responses
- * - Initializes the plugin system on first request
  */
 import { defineMiddleware } from "astro:middleware";
 import { isLocalNetwork } from "./lib/auth";
-import { initPlugins } from "./lib/plugins";
-
-let pluginsInitialized = false;
 
 export const onRequest = defineMiddleware(async ({ request, url, clientAddress }, next) => {
-	// ── Initialize plugins once on first request ──
-	if (!pluginsInitialized) {
-		pluginsInitialized = true;
-		try {
-			await initPlugins();
-		} catch (err) {
-			console.error("[middleware] Plugin initialization failed:", err);
-		}
-	}
-
 	// ── LAN-only guard for API endpoints ──
 	if (url.pathname.startsWith("/api/")) {
 		const ip = clientAddress

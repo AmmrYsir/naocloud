@@ -1,13 +1,5 @@
 @import "tailwindcss";
 
-/* ── Safelist: utility classes guaranteed available for plugin components ── */
-/* Plugins are loaded dynamically at runtime (after build), so we must       */
-/* pre-generate all the Tailwind utilities they might use.                   */
-@source "./plugin-safelist.html";
-
-/* ── Also scan existing plugin files (covers build-time plugins) ── */
-@source "../../plugins";
-
 /* ── Custom Theme Tokens ── */
 @theme {
 	--color-panel: oklch(0.2 0.01 260);
@@ -270,45 +262,6 @@
 	body.light .bg-accent\/30 {
 		@apply !bg-accent/15;
 	}
-}
-
-/* ── Custom Select (plugin dropdown) ── */
-
-/* Light-mode overrides for plugin CustomSelect component */
-body.light .cs-dropdown {
-	@apply !bg-white !border-gray-200 !shadow-gray-200/50;
-}
-
-body.light .cs-trigger {
-	@apply !bg-gray-50 !border-gray-300 !text-gray-900;
-}
-
-body.light .cs-trigger:hover {
-	@apply !border-gray-400;
-}
-
-body.light .cs-trigger:focus {
-	@apply !border-accent;
-}
-
-body.light .cs-group-label {
-	@apply !text-accent;
-}
-
-body.light .cs-divider {
-	@apply !border-gray-200;
-}
-
-body.light .cs-item {
-	@apply !text-gray-700;
-}
-
-body.light .cs-item:hover {
-	@apply !bg-gray-100 !text-gray-900;
-}
-
-body.light .cs-item.bg-accent\/15 {
-	@apply !bg-accent/10 !text-accent;
 }
 
 /* ── Scrollbar ── */
