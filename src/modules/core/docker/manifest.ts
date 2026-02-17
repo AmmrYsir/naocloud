@@ -30,50 +30,96 @@ const manifest: ModuleManifest = {
 	],
 
 	apiRoutes: [
+		// Containers
 		{
 			path: "/containers",
 			method: "GET",
 			handler: "../../pages/api/docker/containers.ts",
 		},
 		{
+			path: "/containers",
+			method: "POST",
+			handler: "../../pages/api/docker/containers.ts",
+		},
+		{
+			path: "/container/:id",
+			method: "GET",
+			handler: "../../pages/api/docker/container/[id].ts",
+		},
+		{
+			path: "/container/:id/action",
+			method: "POST",
+			handler: "../../pages/api/docker/container/[id]/action.ts",
+		},
+		{
+			path: "/container/:id/resources",
+			method: "GET",
+			handler: "../../pages/api/docker/container/[id]/resources.ts",
+		},
+		{
+			path: "/container/:id/resources",
+			method: "POST",
+			handler: "../../pages/api/docker/container/[id]/resources.ts",
+		},
+		// Logs & Terminal
+		{
+			path: "/container/:id/logs",
+			method: "GET",
+			handler: "../../pages/api/docker/container/[id]/logs.ts",
+		},
+		{
+			path: "/container/:id/exec",
+			method: "POST",
+			handler: "../../pages/api/docker/container/[id]/exec.ts",
+		},
+		// Images
+		{
 			path: "/images",
 			method: "GET",
 			handler: "../../pages/api/docker/images.ts",
 		},
+		{
+			path: "/images/:id/scan",
+			method: "POST",
+			handler: "../../pages/api/docker/images/[id]/scan.ts",
+		},
+		// Volumes
 		{
 			path: "/volumes",
 			method: "GET",
 			handler: "../../pages/api/docker/volumes.ts",
 		},
 		{
+			path: "/volumes/:name/backup",
+			method: "POST",
+			handler: "../../pages/api/docker/volumes/[name]/backup.ts",
+		},
+		{
+			path: "/volumes/:name/restore",
+			method: "POST",
+			handler: "../../pages/api/docker/volumes/[name]/restore.ts",
+		},
+		// Networks
+		{
 			path: "/networks",
 			method: "GET",
 			handler: "../../pages/api/docker/networks.ts",
 		},
+		// Docker Compose
 		{
-			path: "/logs",
+			path: "/compose/projects",
 			method: "GET",
-			handler: "../../pages/api/docker/logs.ts",
+			handler: "../../pages/api/docker/compose/projects.ts",
 		},
 		{
-			path: "/container/start",
+			path: "/compose/:project/action",
 			method: "POST",
-			handler: "../../pages/api/docker/container/[action].ts",
+			handler: "../../pages/api/docker/compose/[project]/action.ts",
 		},
 		{
-			path: "/container/stop",
-			method: "POST",
-			handler: "../../pages/api/docker/container/[action].ts",
-		},
-		{
-			path: "/container/restart",
-			method: "POST",
-			handler: "../../pages/api/docker/container/[action].ts",
-		},
-		{
-			path: "/container/remove",
-			method: "POST",
-			handler: "../../pages/api/docker/container/[action].ts",
+			path: "/compose/:project/logs",
+			method: "GET",
+			handler: "../../pages/api/docker/compose/[project]/logs.ts",
 		},
 	],
 

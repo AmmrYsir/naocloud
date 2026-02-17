@@ -13,11 +13,11 @@ A prioritized list of features to implement.
 
 ### Docker Enhancements
 
-- **Resource Limits** - Set CPU/memory limits on containers
-- **Docker Compose** - Manage compose stacks (start/stop/logs)
-- **Container Terminal** - Web-based shell access (xterm.js)
-- **Volume Backup/Restore** - Backup and restore volumes
-- **Image Scanning** - Integrate Trivy for vulnerability scanning
+- ~~**Resource Limits**~~ - Set CPU/memory limits on containers ✅
+- ~~**Docker Compose**~~ - Manage compose stacks (start/stop/logs) ✅
+- ~~**Container Terminal**~~ - Web-based shell access (xterm.js) ✅
+- ~~**Volume Backup/Restore**~~ - Backup and restore volumes ✅
+- ~~**Image Scanning**~~ - Integrate Trivy for vulnerability scanning ✅
 
 ### Developer Experience
 
@@ -72,9 +72,14 @@ A prioritized list of features to implement.
 - Non-disableable security modules
 
 ### Docker
-- Docker container management
-- Docker images, volumes, networks
+- Docker container management (list, start, stop, restart, remove)
+- Docker images, volumes, networks management
 - Container logs viewer
+- **Resource Limits** - View and update container CPU/memory limits
+- **Docker Compose** - List projects, start/stop/restart/pull, view logs
+- **Container Terminal** - Execute commands inside containers via API
+- **Volume Backup/Restore** - Create and restore tar.gz backups
+- **Image Scanning** - Vulnerability scanning with Trivy integration
 
 ### System
 - System stats (CPU, RAM, disk, uptime)
