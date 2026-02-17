@@ -2,10 +2,10 @@
 /**
  * users.astro – User management page
  */
-import BaseLayout from "../layouts/BaseLayout.astro";
-import Navbar from "../components/Navbar.astro";
-import Sidebar from "../components/Sidebar.astro";
-import UserManager from "../components/UserManager";
+import BaseLayout from "../layouts/base-layout.astro";
+import Navbar from "../components/layout/navbar.astro";
+import Sidebar from "../components/layout/sidebar.astro";
+import UserManager from "../components/security/user-manager";
 import { getUserFromCookies } from "../lib/auth";
 
 const user = getUserFromCookies(Astro.cookies);

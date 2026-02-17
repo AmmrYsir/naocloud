@@ -1,9 +1,9 @@
 ---
-import BaseLayout from "../layouts/BaseLayout.astro";
-import Navbar from "../components/Navbar.astro";
-import Sidebar from "../components/Sidebar.astro";
-import DashboardStats from "../components/DashboardStats.jsx";
-import ServiceToggle from "../components/ServiceToggle.jsx";
+import BaseLayout from "../layouts/base-layout.astro";
+import Navbar from "../components/layout/navbar.astro";
+import Sidebar from "../components/layout/sidebar.astro";
+import DashboardStats from "../components/dashboard/dashboard-stats";
+import ServiceToggle from "../components/services/service-toggle";
 import { getUserFromCookies } from "../lib/auth";
 
 const user = getUserFromCookies(Astro.cookies);

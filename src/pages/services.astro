@@ -2,10 +2,10 @@
 /**
  * services.astro – Service management page
  */
-import BaseLayout from "../layouts/BaseLayout.astro";
-import Navbar from "../components/Navbar.astro";
-import Sidebar from "../components/Sidebar.astro";
-import ServiceManager from "../components/ServiceManager";
+import BaseLayout from "../layouts/base-layout.astro";
+import Navbar from "../components/layout/navbar.astro";
+import Sidebar from "../components/layout/sidebar.astro";
+import ServiceManager from "../components/services/service-manager";
 import { getUserFromCookies } from "../lib/auth";
 
 const user = getUserFromCookies(Astro.cookies);

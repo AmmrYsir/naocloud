@@ -2,7 +2,7 @@
  * DockerManager.jsx - Enhanced Docker management with all enhancement features
  */
 import { useState, useEffect } from "react";
-import ContainerCard from "./ContainerCard.jsx";
+import ContainerCard from "./container-card";
 
 export default function DockerManager() {
 	const [tab, setTab] = useState("containers");
