@@ -36,17 +36,40 @@ export const GET: APIRoute = async ({ cookies }) => {
 		return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 });
 	}
 
+	// Check if systemctl is available
+	try {
+		execFileSync("which", ["systemctl"], { encoding: "utf-8" });
+	} catch {
+		return new Response(
+			JSON.stringify({
+				error: "systemctl not found",
+				message: "Service management requires systemd. Make sure you're running on a Linux system with systemd.",
+			}),
+			{ status: 500, headers: { "Content-Type": "application/json" } }
+		);
+	}
+
 	try {
 		const services: ServiceInfo[] = [];
 
 		for (const serviceName of ALLOWED_SERVICES) {
 			try {
 				// Check status
-				const statusResult = execFileSync("systemctl", ["is-active", serviceName], {
-					encoding: "utf-8",
-					timeout: 5000,
-				});
-				const status = statusResult.trim() as ServiceInfo["status"];
+				let status: string;
+				try {
+					const statusResult = execFileSync("systemctl", ["is-active", serviceName], {
+						encoding: "utf-8",
+						timeout: 5000,
+					});
+					status = statusResult.trim();
+				} catch (err: any) {
+					// Command failed - service might be inactive or not exist
+					status = err.status === 3 ? "inactive" : "unknown";
+					if (err.status !== 3) {
+						console.log(`[service] ${serviceName}: not found or error (exit code: ${err.status})`);
+						continue;
+					}
+				}
 
 				// Check if enabled
 				let enabled = false;
@@ -79,8 +102,8 @@ export const GET: APIRoute = async ({ cookies }) => {
 					enabled,
 					description,
 				});
-			} catch {
-				// Service not found, skip
+			} catch (err: any) {
+				console.error(`[service] Error checking ${serviceName}:`, err.message);
 			}
 		}
 
@@ -88,11 +111,20 @@ export const GET: APIRoute = async ({ cookies }) => {
 			status: 200,
 			headers: { "Content-Type": "application/json" },
 		});
-	} catch (err) {
+	} catch (err: any) {
 		console.error("[service] Error listing services:", err);
-		return new Response(JSON.stringify({ error: "Internal server error" }), {
-			status: 500,
-			headers: { "Content-Type": "application/json" },
-		});
+		const errorMessage = err.message || "Internal server error";
+		return new Response(
+			JSON.stringify({
+				error: "Internal server error",
+				message: errorMessage.includes("permission") 
+					? "Permission denied. Service management may require root privileges or sudo access."
+					: errorMessage,
+			}),
+			{
+				status: 500,
+				headers: { "Content-Type": "application/json" },
+			}
+		);
 	}
 };
