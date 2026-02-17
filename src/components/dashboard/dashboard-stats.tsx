@@ -3,7 +3,7 @@
  * Fetches system data periodically and renders stat cards + sparklines.
  */
 import { useState, useEffect, useRef } from "react";
-import Chart from "./Chart.tsx";
+import Chart from "./chart.tsx";
 
 export default function DashboardStats() {
 	const [stats, setStats] = useState(null);
