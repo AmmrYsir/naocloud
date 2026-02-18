@@ -52,6 +52,18 @@ function migrateFromFileStorage(): void {
 	}
 }
 
+function seedDefaultAdmin(): void {
+	const count = db.prepare("SELECT COUNT(*) as count FROM users").get() as { count: number };
+	if (count.count === 0) {
+		const DEFAULT_ADMIN_HASH = "$2b$10$EsnaG0qPfjmctTUy2CZoAOL7DSFuGPnfjeJ486dY/iUaVWPH23hru";
+		db.prepare(`
+			INSERT INTO users (username, hash, role, created_at)
+			VALUES (?, ?, ?, ?)
+		`).run("admin", DEFAULT_ADMIN_HASH, "admin", new Date().toISOString());
+		console.log("[db] Created default admin user");
+	}
+}
+
 export function initializeDatabase(): void {
 	if (!tableExists("users")) {
 		db.exec(`
@@ -66,6 +78,8 @@ export function initializeDatabase(): void {
 		console.log("[db] Created users table");
 
 		migrateFromFileStorage();
+	} else {
+		seedDefaultAdmin();
 	}
 
 	if (!tableExists("audit_logs")) {
