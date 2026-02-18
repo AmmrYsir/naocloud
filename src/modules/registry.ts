@@ -2,6 +2,7 @@
  * Module registry - tracks all loaded modules in the system.
  */
 
+import type { UserRole } from "../lib/users";
 import type { LoadedModule, ModuleManifest, NavItem, ModulePage, ModuleWidget } from "./types";
 
 const modules = new Map<string, LoadedModule>();
@@ -39,10 +40,9 @@ export function setModuleEnabled(id: string, enabled: boolean): boolean {
 	const module = modules.get(id);
 	if (!module) return false;
 
-	// Check if module can be disabled
 	const canDisable = module.manifest.canDisable !== false;
 	if (!enabled && !canDisable) {
-		return false; // Cannot disable this module
+		return false;
 	}
 
 	if (enabled) {
@@ -60,14 +60,49 @@ export function canDisableModule(id: string): boolean {
 	return module.manifest.canDisable !== false;
 }
 
-export function getNavItems(): NavItem[] {
+function hasPermission(role: UserRole | undefined, permission: string | undefined): boolean {
+	if (!permission) return true;
+	if (!role) return false;
+
+	const permissions: Record<UserRole, string[]> = {
+		admin: ["*", "admin"],
+		operator: ["docker:read", "docker:write", "service:read", "service:write", "system:read", "settings:read"],
+		viewer: ["docker:read", "service:read", "system:read", "settings:read"],
+	};
+
+	const userPerms = permissions[role] || [];
+	return userPerms.includes("*") || userPerms.includes(permission);
+}
+
+export function getNavItems(user?: { role: UserRole }): NavItem[] {
 	const items: NavItem[] = [];
 	for (const module of getEnabledModules()) {
 		if (module.manifest.navItems) {
-			items.push(...module.manifest.navItems);
+			for (const item of module.manifest.navItems) {
+				if (hasPermission(user?.role, item.requiredPermission)) {
+					items.push(item);
+				}
+			}
 		}
 	}
+
+	items.sort((a, b) => (a.order ?? 999) - (b.order ?? 999));
 	return items;
+}
+
+export function getNavGroups(user?: { role: UserRole }): Record<string, NavItem[]> {
+	const items = getNavItems(user);
+	const groups: Record<string, NavItem[]> = {};
+
+	for (const item of items) {
+		const group = item.group || "";
+		if (!groups[group]) {
+			groups[group] = [];
+		}
+		groups[group].push(item);
+	}
+
+	return groups;
 }
 
 export function getModulePages(moduleId: string): ModulePage[] {

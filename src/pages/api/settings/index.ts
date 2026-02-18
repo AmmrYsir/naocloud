@@ -1,59 +1,48 @@
 /**
  * GET /api/settings – Get current settings.
- * POST /api/settings – Update hostname/timezone.
+ * POST /api/settings – Update settings.
  */
 import type { APIRoute } from "astro";
-import { runSync, runAsync } from "../../../lib/exec";
-import { getUserFromCookies } from "../../../lib/auth";
+import { getSettings, updateSettings, type Settings } from "../../../lib/settings";
 
-export const GET: APIRoute = async ({ cookies }) => {
-	const user = getUserFromCookies(cookies);
-	if (!user) return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 });
-
-	const hostname = runSync("hostname");
-	const timezone = runSync("timedatectl");
-
-	let tz = "UTC";
-	if (timezone.ok) {
-		const match = timezone.stdout.match(/Time zone:\s*(\S+)/);
-		if (match) tz = match[1];
+export const GET: APIRoute = async () => {
+	try {
+		const settings = getSettings();
+		return new Response(JSON.stringify(settings), {
+			status: 200,
+			headers: { "Content-Type": "application/json" },
+		});
+	} catch (err) {
+		console.error("[settings] Error getting settings:", err);
+		return new Response(JSON.stringify({ error: "Failed to get settings" }), {
+			status: 500,
+			headers: { "Content-Type": "application/json" },
+		});
 	}
-
-	return new Response(
-		JSON.stringify({
-			hostname: hostname.stdout || "unknown",
-			timezone: tz,
-		}),
-		{ status: 200, headers: { "Content-Type": "application/json" } }
-	);
 };
 
-export const POST: APIRoute = async ({ cookies, request }) => {
-	const user = getUserFromCookies(cookies);
-	if (!user) return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 });
-	if (user.role !== "admin") return new Response(JSON.stringify({ error: "Admin only" }), { status: 403 });
-
+export const POST: APIRoute = async ({ request }) => {
 	try {
 		const body = await request.json();
-		const results: string[] = [];
+		const allowedKeys: (keyof Settings)[] = ["hostname", "timezone", "theme"];
+		const updates: Partial<Settings> = {};
 
-		if (body.hostname) {
-			const sanitized = body.hostname.replace(/[^a-zA-Z0-9\-]/g, "");
-			const r = await runAsync("hostnamectl:set-hostname", [sanitized]);
-			results.push(r.ok ? `Hostname set to ${sanitized}` : `Failed: ${r.stderr}`);
+		for (const key of allowedKeys) {
+			if (body[key] !== undefined) {
+				(updates as Record<string, string>)[key] = String(body[key]);
+			}
 		}
 
-		if (body.timezone) {
-			const sanitized = body.timezone.replace(/[^a-zA-Z0-9\/\_\-]/g, "");
-			const r = await runAsync("timedatectl:set-timezone", [sanitized]);
-			results.push(r.ok ? `Timezone set to ${sanitized}` : `Failed: ${r.stderr}`);
-		}
-
-		return new Response(
-			JSON.stringify({ ok: true, results }),
-			{ status: 200, headers: { "Content-Type": "application/json" } }
-		);
-	} catch {
-		return new Response(JSON.stringify({ error: "Internal server error" }), { status: 500 });
+		updateSettings(updates);
+		return new Response(JSON.stringify({ ok: true }), {
+			status: 200,
+			headers: { "Content-Type": "application/json" },
+		});
+	} catch (err) {
+		console.error("[settings] Error updating settings:", err);
+		return new Response(JSON.stringify({ error: "Failed to update settings" }), {
+			status: 500,
+			headers: { "Content-Type": "application/json" },
+		});
 	}
 };

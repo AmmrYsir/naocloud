@@ -11,6 +11,8 @@ export interface NavItem {
 	label: string;
 	href: string;
 	icon: string;
+	group?: string;
+	order?: number;
 	requiredPermission?: string;
 }
 

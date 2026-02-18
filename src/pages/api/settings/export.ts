@@ -2,38 +2,33 @@
  * GET /api/settings/export – Export configuration as JSON.
  */
 import type { APIRoute } from "astro";
-import { runSync } from "../../../lib/exec";
-import { getUserFromCookies } from "../../../lib/auth";
+import { getSettings } from "../../../lib/settings";
 
-export const GET: APIRoute = async ({ cookies }) => {
-	const user = getUserFromCookies(cookies);
-	if (!user) return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 });
+export const GET: APIRoute = async () => {
+	try {
+		const settings = getSettings();
+		const config = {
+			version: "1.0.0",
+			exportedAt: new Date().toISOString(),
+			server: {
+				hostname: settings.hostname,
+				timezone: settings.timezone,
+			},
+			theme: settings.theme,
+		};
 
-	const hostname = runSync("hostname");
-	const timezone = runSync("timedatectl");
-
-	let tz = "UTC";
-	if (timezone.ok) {
-		const match = timezone.stdout.match(/Time zone:\s*(\S+)/);
-		if (match) tz = match[1];
+		return new Response(JSON.stringify(config, null, 2), {
+			status: 200,
+			headers: {
+				"Content-Type": "application/json",
+				"Content-Disposition": 'attachment; filename="serverpilot-config.json"',
+			},
+		});
+	} catch (err) {
+		console.error("[settings] Error exporting settings:", err);
+		return new Response(JSON.stringify({ error: "Failed to export settings" }), {
+			status: 500,
+			headers: { "Content-Type": "application/json" },
+		});
 	}
-
-	const config = {
-		version: "1.0.0",
-		exportedAt: new Date().toISOString(),
-		server: {
-			hostname: hostname.stdout || "unknown",
-			timezone: tz,
-		},
-		services: ["nginx", "ssh", "ufw", "docker"],
-		theme: "dark",
-	};
-
-	return new Response(JSON.stringify(config, null, 2), {
-		status: 200,
-		headers: {
-			"Content-Type": "application/json",
-			"Content-Disposition": 'attachment; filename="serverpilot-config.json"',
-		},
-	});
 };

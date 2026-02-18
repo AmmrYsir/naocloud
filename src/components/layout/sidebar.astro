@@ -1,65 +1,77 @@
 ---
-/**
- * Sidebar.astro – Collapsible sidebar navigation.
- * On mobile, it becomes a bottom navigation bar.
- * Navigation items loaded from module system.
- */
-import { getNavItems } from "../../modules/registry";
+import { getNavGroups } from "../../modules/registry";
+import { getUserFromCookies } from "../../lib/auth";
 
-interface NavItem {
-	label: string;
-	href: string;
-	icon: string;
-}
+const user = getUserFromCookies(Astro.cookies);
+const groupedNavItems = getNavGroups(user);
 
-// Dashboard and Modules are core system pages - everything else comes from modules
-const coreItems: NavItem[] = [
+const coreItems = [
 	{
 		label: "Dashboard",
 		href: "/",
 		icon: `<svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>`,
+		group: "",
+		order: 1,
 	},
 	{
 		label: "Modules",
 		href: "/modules",
 		icon: `<svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>`,
+		group: "",
+		order: 6,
 	},
 ];
 
-// Get nav items from modules (Docker, System, Settings, etc.)
-const moduleNavItems = getNavItems();
+for (const item of coreItems) {
+	const group = item.group || "";
+	if (!groupedNavItems[group]) {
+		groupedNavItems[group] = [];
+	}
+	groupedNavItems[group].push(item);
+}
 
-// Combine: core items first, then module items
-const items: NavItem[] = [...coreItems, ...moduleNavItems];
+for (const group of Object.keys(groupedNavItems)) {
+	groupedNavItems[group].sort((a, b) => (a.order ?? 999) - (b.order ?? 999));
+}
 
 const currentPath = Astro.url.pathname;
 ---
 
-<!-- Desktop Sidebar -->
 <aside
 	class="hidden md:flex fixed left-0 top-0 z-40 h-screen w-64 flex-col border-r border-border-dim bg-panel/60 backdrop-blur-xl pt-[60px]"
 >
-	<nav class="flex-1 space-y-1 px-3 py-4">
+	<nav class="flex-1 space-y-6 overflow-y-auto px-3 py-4">
 		{
-			items.map((item) => {
-				const active =
-					currentPath === item.href ||
-					(item.href !== "/" && currentPath.startsWith(item.href));
-				return (
-					<a
-						href={item.href}
-						class:list={[
-							"flex items-center gap-3 rounded-xl px-4 py-2.5 text-sm font-medium transition-all",
-							active
-								? "bg-accent/20 text-accent shadow-sm"
-								: "text-gray-400 hover:bg-white/5 hover:text-gray-200",
-						]}
-					>
-						<Fragment set:html={item.icon} />
-						{item.label}
-					</a>
-				);
-			})
+			Object.entries(groupedNavItems).map(([groupName, items]) => (
+				<div>
+					{groupName && (
+						<h3 class="mb-2 px-4 text-xs font-semibold uppercase tracking-wider text-gray-500">
+							{groupName}
+						</h3>
+					)}
+					<div class="space-y-1">
+						{items.map((item) => {
+							const active =
+								currentPath === item.href ||
+								(item.href !== "/" && currentPath.startsWith(item.href));
+							return (
+								<a
+									href={item.href}
+									class:list={[
+										"flex items-center gap-3 rounded-xl px-4 py-2.5 text-sm font-medium transition-all",
+										active
+											? "bg-accent/20 text-accent shadow-sm"
+											: "text-gray-400 hover:bg-white/5 hover:text-gray-200",
+									]}
+								>
+									<Fragment set:html={item.icon} />
+									{item.label}
+								</a>
+							);
+						})}
+					</div>
+				</div>
+			))
 		}
 	</nav>
 
@@ -68,12 +80,16 @@ const currentPath = Astro.url.pathname;
 	</div>
 </aside>
 
-<!-- Mobile Bottom Nav -->
 <nav
 	class="md:hidden fixed bottom-0 left-0 right-0 z-50 flex items-center justify-around border-t border-border-dim bg-panel/90 backdrop-blur-xl px-2 py-2"
 >
 	{
-		items.map((item) => {
+		[
+			...coreItems,
+			...(groupedNavItems[""] || []).filter(
+				(i) => !coreItems.find((c) => c.href === i.href)
+			),
+		].map((item) => {
 			const active =
 				currentPath === item.href ||
 				(item.href !== "/" && currentPath.startsWith(item.href));
@@ -82,9 +98,7 @@ const currentPath = Astro.url.pathname;
 					href={item.href}
 					class:list={[
 						"flex flex-col items-center gap-1 rounded-xl px-3 py-1.5 text-[10px] font-medium transition",
-						active
-							? "text-accent"
-							: "text-gray-500 hover:text-gray-300",
+						active ? "text-accent" : "text-gray-500 hover:text-gray-300",
 					]}
 				>
 					<Fragment set:html={item.icon} />

@@ -123,6 +123,27 @@ export function initializeDatabase(): void {
 			}
 		}
 	}
+
+	if (!tableExists("settings")) {
+		db.exec(`
+			CREATE TABLE settings (
+				key TEXT PRIMARY KEY,
+				value TEXT,
+				updated_at TEXT NOT NULL
+			)
+		`);
+		console.log("[db] Created settings table");
+
+		const defaultSettings = [
+			{ key: "hostname", value: "" },
+			{ key: "timezone", value: "UTC" },
+			{ key: "theme", value: "dark" },
+		];
+		const insert = db.prepare(`INSERT INTO settings (key, value, updated_at) VALUES (?, ?, ?)`);
+		for (const s of defaultSettings) {
+			insert.run(s.key, s.value, new Date().toISOString());
+		}
+	}
 }
 
 initializeDatabase();

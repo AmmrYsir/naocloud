@@ -17,6 +17,8 @@ const manifest: ModuleManifest = {
 			label: "Services",
 			href: "/services",
 			icon: `<svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>`,
+			group: "",
+			order: 3,
 		},
 	],
 

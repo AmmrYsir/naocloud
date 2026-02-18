@@ -3,9 +3,12 @@ import BaseLayout from "../layouts/base-layout.astro";
 import Navbar from "../components/layout/navbar.astro";
 import Sidebar from "../components/layout/sidebar.astro";
 import { getUserFromCookies } from "../lib/auth";
+import { getSettings } from "../lib/settings";
 
 const user = getUserFromCookies(Astro.cookies);
 if (!user) return Astro.redirect("/login");
+
+const settings = getSettings();
 ---
 
 <BaseLayout title="Settings – ServerPilot">
@@ -37,6 +40,7 @@ if (!user) return Astro.redirect("/login");
 							<input
 								type="text"
 								id="hostname"
+								value={settings.hostname}
 								placeholder="my-server"
 								class="mt-1 w-full rounded-xl border border-border-dim bg-white/5 px-4 py-2.5 text-sm text-gray-200 placeholder-gray-600 outline-none transition focus:border-accent/50 focus:ring-1 focus:ring-accent/30"
 							/>
@@ -49,6 +53,7 @@ if (!user) return Astro.redirect("/login");
 							>
 							<select
 								id="timezone"
+								value={settings.timezone}
 								class="mt-1 w-full rounded-xl border border-border-dim bg-white/5 px-4 py-2.5 text-sm text-gray-200 outline-none transition focus:border-accent/50 focus:ring-1 focus:ring-accent/30"
 							>
 								<option value="UTC">UTC</option>
@@ -270,9 +275,34 @@ if (!user) return Astro.redirect("/login");
 		else alert("Failed to save settings");
 	});
 
-	themeToggle?.addEventListener("click", () => {
+	themeToggle?.addEventListener("click", async () => {
 		document.body.classList.toggle("light");
 		const isLight = document.body.classList.contains("light");
 		localStorage.setItem("sp-theme", isLight ? "light" : "dark");
+		await fetch("/api/settings", {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({ theme: isLight ? "light" : "dark" }),
+		});
 	});
+
+	// Initialize theme from settings
+	const initTheme = async () => {
+		try {
+			const res = await fetch("/api/settings");
+			const data = await res.json();
+			if (data.theme === "light") {
+				document.body.classList.add("light");
+				themeToggle?.classList.remove("bg-emerald-500");
+				themeToggle?.classList.add("bg-gray-400");
+				const span = themeToggle?.querySelector("span");
+				if (span) {
+					span.classList.remove("translate-x-5");
+				}
+			}
+		} catch {
+			// Use localStorage as fallback
+		}
+	};
+	initTheme();
 </script>

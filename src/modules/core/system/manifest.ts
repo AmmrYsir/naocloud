@@ -17,6 +17,8 @@ const manifest: ModuleManifest = {
 			label: "System",
 			href: "/system",
 			icon: `<svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8m-4-4v4"/></svg>`,
+			group: "",
+			order: 4,
 		},
 	],
 
