@@ -15,6 +15,7 @@ export const GET: APIRoute = async () => {
 		description: m.manifest.description,
 		type: m.manifest.type,
 		enabled: m.enabled,
+		canDisable: m.manifest.canDisable !== false,
 		navItems: m.manifest.navItems?.map((n) => n.id) ?? [],
 		apiRoutes: m.manifest.apiRoutes?.map((r) => `${r.method} ${r.path}`) ?? [],
 		widgets: m.manifest.widgets?.map((w) => w.id) ?? [],

@@ -20,7 +20,7 @@ async function loadCoreModules(): Promise<void> {
 
 	try {
 		const { default: settingsManifest } = await import("./core/settings/manifest");
-		registerModule({ ...settingsManifest, id: "settings", type: "core" });
+		registerModule({ ...settingsManifest, id: "settings", type: "core", canDisable: false });
 	} catch (err) {
 		console.error("[modules] Failed to load settings module:", err);
 	}
@@ -57,10 +57,10 @@ async function loadCoreModules(): Promise<void> {
 		console.error("[modules] Failed to load audit module:", err);
 	}
 
-	// Load Modules page as a core module
+	// Load Modules page as a core module - cannot be disabled
 	try {
 		const { default: modulesManifest } = await import("./core/modules/manifest");
-		registerModule({ ...modulesManifest, id: "modules", type: "core" });
+		registerModule({ ...modulesManifest, id: "modules", type: "core", canDisable: false });
 	} catch (err) {
 		console.error("[modules] Failed to load modules module:", err);
 	}
