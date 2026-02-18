@@ -1,53 +1,22 @@
-import { db } from "./db";
+/**
+ * Audit Logs - File-based logging system
+ * This module handles user action audit logs stored in files
+ */
+import { logInfo, logError, logWarn, getLogs, exportLogs, LOG_LEVELS, ERROR_CODES, type LogLevel } from "./logger";
+
+export type { LogLevel };
+export { LOG_LEVELS, ERROR_CODES };
 
 export interface AuditLog {
 	id: string;
 	timestamp: string;
-	user: string;
+	level: LogLevel;
+	code: string;
+	user?: string;
 	action: string;
 	target: string;
 	details: string;
 	ip?: string;
-}
-
-interface DbAuditLog {
-	id: string;
-	timestamp: string;
-	user: string;
-	action: string;
-	target: string;
-	details: string | null;
-	ip: string | null;
-}
-
-const MAX_LOGS = 10000;
-
-function mapDbLog(row: DbAuditLog): AuditLog {
-	return {
-		id: row.id,
-		timestamp: row.timestamp,
-		user: row.user,
-		action: row.action,
-		target: row.target,
-		details: row.details || "",
-		ip: row.ip || undefined,
-	};
-}
-
-function generateId(): string {
-	return `${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
-}
-
-function trimOldLogs(): void {
-	const count = db.prepare("SELECT COUNT(*) as count FROM audit_logs").get() as { count: number };
-	if (count.count > MAX_LOGS) {
-		const deleteCount = count.count - MAX_LOGS;
-		db.prepare(`
-			DELETE FROM audit_logs WHERE id IN (
-				SELECT id FROM audit_logs ORDER BY timestamp ASC LIMIT ?
-			)
-		`).run(deleteCount);
-	}
 }
 
 export function logAction(
@@ -55,19 +24,39 @@ export function logAction(
 	action: string,
 	target: string,
 	details: string,
-	ip?: string
+	ip?: string,
+	options?: {
+		level?: LogLevel;
+		code?: string;
+	}
 ): void {
-	const id = generateId();
-	const timestamp = new Date().toISOString();
+	// Write to file logger
+	const logFn = options?.level === LOG_LEVELS.ERROR
+		? logError
+		: options?.level === LOG_LEVELS.WARN
+			? logWarn
+			: logInfo;
 
-	db.prepare(`
-		INSERT INTO audit_logs (id, timestamp, user, action, target, details, ip)
-		VALUES (?, ?, ?, ?, ?, ?, ?)
-	`).run(id, timestamp, user, action, target, details, ip || null);
+	logFn(
+		options?.code as any ?? "INF000",
+		`${user} ${action} ${target}: ${details}`,
+		{ user, action, target, ip }
+	);
 
-	trimOldLogs();
+	console.log(`[AUDIT] ${options?.level?.toUpperCase() ?? "INFO"} ${user} ${action} ${target}: ${details}${ip ? ` (IP: ${ip})` : ""}`);
+}
 
-	console.log(`[AUDIT] ${user} ${action} ${target}: ${details}${ip ? ` (IP: ${ip})` : ""}`);
+export function logSystemError(
+	code: string,
+	message: string,
+	options?: {
+		user?: string;
+		action?: string;
+		target?: string;
+		ip?: string;
+	}
+): void {
+	logError(code as any, message, options);
 }
 
 export function getAuditLogs(
@@ -75,57 +64,48 @@ export function getAuditLogs(
 		limit?: number;
 		user?: string;
 		action?: string;
+		level?: LogLevel;
+		code?: string;
+		search?: string;
 		startDate?: string;
 		endDate?: string;
 	} = {}
 ): AuditLog[] {
-	let query = "SELECT * FROM audit_logs WHERE 1=1";
-	const params: (string | number)[] = [];
+	const logs = getLogs({
+		level: options.level,
+		code: options.code,
+		user: options.user,
+		action: options.action,
+		search: options.search,
+		limit: options.limit,
+	});
 
-	if (options.user) {
-		query += " AND user = ?";
-		params.push(options.user);
-	}
-	if (options.action) {
-		query += " AND action = ?";
-		params.push(options.action);
-	}
+	// Filter by date if specified
+	let filtered = logs;
 	if (options.startDate) {
-		query += " AND timestamp >= ?";
-		params.push(options.startDate);
+		filtered = filtered.filter((l) => l.timestamp >= options.startDate!);
 	}
 	if (options.endDate) {
-		query += " AND timestamp <= ?";
-		params.push(options.endDate);
+		filtered = filtered.filter((l) => l.timestamp <= options.endDate!);
 	}
 
-	query += " ORDER BY timestamp DESC";
-
-	if (options.limit) {
-		query += " LIMIT ?";
-		params.push(options.limit);
-	}
-
-	const rows = db.prepare(query).all(...params) as DbAuditLog[];
-	return rows.map(mapDbLog);
+	return filtered.map((l, i) => ({
+		id: `${i}-${l.timestamp}`,
+		timestamp: l.timestamp,
+		level: l.level,
+		code: l.code,
+		user: l.user,
+		action: l.action || "SYSTEM",
+		target: l.target || "",
+		details: l.message,
+		ip: l.ip,
+	}));
 }
 
-export function exportAuditLogs(format: "json" | "csv" = "json"): string {
-	const logs = getAuditLogs();
-
-	if (format === "csv") {
-		const headers = ["ID", "Timestamp", "User", "Action", "Target", "Details", "IP"];
-		const rows = logs.map((l) => [
-			l.id,
-			l.timestamp,
-			l.user,
-			l.action,
-			l.target,
-			`"${l.details.replace(/"/g, '""')}"`,
-			l.ip || "",
-		]);
-		return [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
-	}
-
-	return JSON.stringify(logs, null, 2);
+export function exportAuditLogs(format: "json" | "csv" = "json", options?: {
+	level?: LogLevel;
+	startDate?: string;
+	endDate?: string;
+}): string {
+	return exportLogs(format, options);
 }

@@ -4,7 +4,7 @@
  */
 import type { APIRoute } from "astro";
 import { getUserFromCookies } from "../../../../../lib/auth";
-import { logAction } from "../../../../../lib/audit";
+import { logAction, LOG_LEVELS, ERROR_CODES } from "../../../../../lib/audit";
 import { execFileSync } from "child_process";
 
 export const POST: APIRoute = async ({ cookies, params, request }) => {
@@ -27,40 +27,67 @@ export const POST: APIRoute = async ({ cookies, params, request }) => {
 		}
 
 		let result: string;
-		switch (action) {
-			case "up":
-				result = execFileSync(
-					"docker-compose",
-					["-p", project, "up", "-d"],
-					{ encoding: "utf-8", timeout: 60000 }
-				);
-				break;
-			case "down":
-				result = execFileSync(
-					"docker-compose",
-					["-p", project, "down"],
-					{ encoding: "utf-8", timeout: 60000 }
-				);
-				break;
-			case "restart":
-				result = execFileSync(
-					"docker-compose",
-					["-p", project, "restart"],
-					{ encoding: "utf-8", timeout: 60000 }
-				);
-				break;
-			case "pull":
-				result = execFileSync(
-					"docker-compose",
-					["-p", project, "pull"],
-					{ encoding: "utf-8", timeout: 120000 }
-				);
-				break;
-			default:
-				return new Response(JSON.stringify({ error: "Invalid action" }), { status: 400 });
+		try {
+			switch (action) {
+				case "up":
+					result = execFileSync(
+						"docker-compose",
+						["-p", project, "up", "-d"],
+						{ encoding: "utf-8", timeout: 60000 }
+					);
+					break;
+				case "down":
+					result = execFileSync(
+						"docker-compose",
+						["-p", project, "down"],
+						{ encoding: "utf-8", timeout: 60000 }
+					);
+					break;
+				case "restart":
+					result = execFileSync(
+						"docker-compose",
+						["-p", project, "restart"],
+						{ encoding: "utf-8", timeout: 60000 }
+					);
+					break;
+				case "pull":
+					result = execFileSync(
+						"docker-compose",
+						["-p", project, "pull"],
+						{ encoding: "utf-8", timeout: 120000 }
+					);
+					break;
+				default:
+					return new Response(JSON.stringify({ error: "Invalid action" }), { status: 400 });
+			}
+		} catch (execErr: any) {
+			const execErrorMsg = execErr instanceof Error ? execErr.message : "Unknown error";
+			logAction(
+				user.username,
+				"COMPOSE_ACTION",
+				project,
+				`Action ${action} failed: ${execErrorMsg}`,
+				undefined,
+				{ level: LOG_LEVELS.ERROR, code: ERROR_CODES.ERR_COMPOSE_ACTION_FAILED }
+			);
+			return new Response(
+				JSON.stringify({
+					error: "Action failed",
+					message: execErrorMsg,
+					code: ERROR_CODES.ERR_COMPOSE_ACTION_FAILED,
+				}),
+				{ status: 500, headers: { "Content-Type": "application/json" } }
+			);
 		}
 
-		logAction(user.username, "COMPOSE_ACTION", project, `Action: ${action}`);
+		logAction(
+			user.username,
+			"COMPOSE_ACTION",
+			project,
+			`Action: ${action} successful`,
+			undefined,
+			{ level: LOG_LEVELS.INFO, code: "INF003" }
+		);
 
 		return new Response(
 			JSON.stringify({ ok: true, action, project, output: result }),
@@ -70,11 +97,21 @@ export const POST: APIRoute = async ({ cookies, params, request }) => {
 			}
 		);
 	} catch (err: any) {
+		const errorMsg = err instanceof Error ? err.message : "Unknown error";
+		logAction(
+			user.username,
+			"COMPOSE_ACTION",
+			project,
+			`Internal error: ${errorMsg}`,
+			undefined,
+			{ level: LOG_LEVELS.ERROR, code: ERROR_CODES.ERR_INTERNAL }
+		);
 		console.error("[docker] Error performing compose action:", err);
 		return new Response(
 			JSON.stringify({
 				error: "Action failed",
-				message: err.message,
+				message: errorMsg,
+				code: ERROR_CODES.ERR_INTERNAL,
 			}),
 			{ status: 500, headers: { "Content-Type": "application/json" } }
 		);

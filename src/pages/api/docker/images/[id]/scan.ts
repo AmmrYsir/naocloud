@@ -4,7 +4,7 @@
  */
 import type { APIRoute } from "astro";
 import { getUserFromCookies } from "../../../../../lib/auth";
-import { logAction } from "../../../../../lib/audit";
+import { logAction, LOG_LEVELS, ERROR_CODES } from "../../../../../lib/audit";
 import { execFileSync } from "child_process";
 
 export const POST: APIRoute = async ({ cookies, params }) => {
@@ -23,10 +23,19 @@ export const POST: APIRoute = async ({ cookies, params }) => {
 		try {
 			execFileSync("which", ["trivy"], { encoding: "utf-8" });
 		} catch {
+			logAction(
+				user.username,
+				"IMAGE_SCAN",
+				imageId,
+				"Trivy not installed",
+				undefined,
+				{ level: LOG_LEVELS.ERROR, code: ERROR_CODES.ERR_INTERNAL }
+			);
 			return new Response(
 				JSON.stringify({
 					error: "Trivy not installed",
 					message: "Trivy is required for image scanning. Install it with: curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin",
+					code: ERROR_CODES.ERR_INTERNAL,
 				}),
 				{ status: 500, headers: { "Content-Type": "application/json" } }
 			);
@@ -53,9 +62,9 @@ export const POST: APIRoute = async ({ cookies, params }) => {
 		let criticalCount = 0;
 
 		if (scanResult.Results) {
-			for (const result of scanResult.Results) {
-				if (result.Vulnerabilities) {
-					for (const vuln of result.Vulnerabilities) {
+			for (const resultItem of scanResult.Results) {
+				if (resultItem.Vulnerabilities) {
+					for (const vuln of resultItem.Vulnerabilities) {
 						if (vuln.Severity === "HIGH") highCount++;
 						if (vuln.Severity === "CRITICAL") criticalCount++;
 					}
@@ -67,7 +76,9 @@ export const POST: APIRoute = async ({ cookies, params }) => {
 			user.username,
 			"IMAGE_SCAN",
 			imageId,
-			`Scan completed: ${highCount} high, ${criticalCount} critical vulnerabilities`
+			`Scan completed: ${highCount} high, ${criticalCount} critical vulnerabilities`,
+			undefined,
+			{ level: LOG_LEVELS.INFO, code: "INF004" }
 		);
 
 		return new Response(
@@ -86,11 +97,21 @@ export const POST: APIRoute = async ({ cookies, params }) => {
 			}
 		);
 	} catch (err: any) {
+		const errorMsg = err instanceof Error ? err.message : "Unknown error";
+		logAction(
+			user.username,
+			"IMAGE_SCAN",
+			imageId,
+			`Scan failed: ${errorMsg}`,
+			undefined,
+			{ level: LOG_LEVELS.ERROR, code: ERROR_CODES.ERR_INTERNAL }
+		);
 		console.error("[docker] Error scanning image:", err);
 		return new Response(
 			JSON.stringify({
 				error: "Scan failed",
-				message: err.message,
+				message: errorMsg,
+				code: ERROR_CODES.ERR_INTERNAL,
 			}),
 			{ status: 500, headers: { "Content-Type": "application/json" } }
 		);

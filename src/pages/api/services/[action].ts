@@ -5,6 +5,7 @@
 import type { APIRoute } from "astro";
 import { runAsync } from "../../../lib/exec";
 import { getUserFromCookies } from "../../../lib/auth";
+import { logAction, LOG_LEVELS, ERROR_CODES } from "../../../lib/audit";
 
 const ALLOWED_SERVICES = ["nginx", "ssh", "sshd", "ufw", "docker", "apache2", "mysql", "postgresql", "redis"];
 
@@ -28,11 +29,44 @@ export const POST: APIRoute = async ({ cookies, request, params }) => {
 
 		const result = await runAsync(`systemctl:${action}`, [name], 15000);
 
-		return new Response(
-			JSON.stringify({ ok: result.ok, message: result.stdout || result.stderr }),
-			{ status: result.ok ? 200 : 500, headers: { "Content-Type": "application/json" } }
+		if (!result.ok) {
+			logAction(
+				user.username,
+				`SERVICE_${action.toUpperCase()}`,
+				name,
+				`Failed: ${result.stderr || result.stdout}`,
+				undefined,
+				{ level: LOG_LEVELS.ERROR, code: ERROR_CODES.ERR_SERVICE_ACTION_FAILED }
+			);
+
+			return new Response(
+				JSON.stringify({ ok: false, error: result.stderr || "Action failed", code: ERROR_CODES.ERR_SERVICE_ACTION_FAILED }),
+				{ status: 500, headers: { "Content-Type": "application/json" } }
+			);
+		}
+
+		logAction(
+			user.username,
+			`SERVICE_${action.toUpperCase()}`,
+			name,
+			`Service ${action} successful`,
+			undefined,
+			{ level: LOG_LEVELS.INFO, code: "INF006" }
 		);
-	} catch {
-		return new Response(JSON.stringify({ error: "Internal server error" }), { status: 500 });
+
+		return new Response(
+			JSON.stringify({ ok: true, message: result.stdout }),
+			{ status: 200, headers: { "Content-Type": "application/json" } }
+		);
+	} catch (err) {
+		logAction(
+			user.username,
+			`SERVICE_${action || "ACTION"}`,
+			"unknown",
+			`Internal error: ${err instanceof Error ? err.message : "Unknown error"}`,
+			undefined,
+			{ level: LOG_LEVELS.ERROR, code: ERROR_CODES.ERR_INTERNAL }
+		);
+		return new Response(JSON.stringify({ error: "Internal server error", code: ERROR_CODES.ERR_INTERNAL }), { status: 500 });
 	}
 };

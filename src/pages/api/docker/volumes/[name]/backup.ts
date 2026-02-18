@@ -4,7 +4,7 @@
  */
 import type { APIRoute } from "astro";
 import { getUserFromCookies } from "../../../../../lib/auth";
-import { logAction } from "../../../../../lib/audit";
+import { logAction, LOG_LEVELS, ERROR_CODES } from "../../../../../lib/audit";
 import { execFileSync } from "child_process";
 import * as fs from "fs";
 import * as path from "path";
@@ -52,7 +52,14 @@ export const POST: APIRoute = async ({ cookies, params }) => {
 			{ encoding: "utf-8", timeout: 120000 }
 		);
 
-		logAction(user.username, "VOLUME_BACKUP", volumeName, `Backup created: ${backupFile}`);
+		logAction(
+			user.username,
+			"VOLUME_BACKUP",
+			volumeName,
+			`Backup created: ${backupFile}`,
+			undefined,
+			{ level: LOG_LEVELS.INFO, code: "INF002" }
+		);
 
 		return new Response(
 			JSON.stringify({
@@ -67,11 +74,21 @@ export const POST: APIRoute = async ({ cookies, params }) => {
 			}
 		);
 	} catch (err: any) {
+		const errorMsg = err instanceof Error ? err.message : "Unknown error";
+		logAction(
+			user.username,
+			"VOLUME_BACKUP",
+			volumeName,
+			`Backup failed: ${errorMsg}`,
+			undefined,
+			{ level: LOG_LEVELS.ERROR, code: ERROR_CODES.ERR_VOLUME_BACKUP_FAILED }
+		);
 		console.error("[docker] Error backing up volume:", err);
 		return new Response(
 			JSON.stringify({
 				error: "Backup failed",
-				message: err.message,
+				message: errorMsg,
+				code: ERROR_CODES.ERR_VOLUME_BACKUP_FAILED,
 			}),
 			{ status: 500, headers: { "Content-Type": "application/json" } }
 		);

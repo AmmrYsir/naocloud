@@ -91,14 +91,14 @@ export default function ContainerCard({ container, onRefresh }: Props) {
 		}
 	}
 
-	async function updateResources(e: React.FormEvent<HTMLFormElement>) {
+	async function updateResources(e: <HTMLFormElement>) {
 		e.preventDefault();
 		setUpdatingResources(true);
 		try {
 			const formData = new FormData(e.currentTarget);
 			const cpu = formData.get("cpu");
 			const memory = formData.get("memory");
-			
+
 			const res = await fetch(`/api/docker/container/${container.Id}/resources`, {
 				method: "POST",
 				credentials: "same-origin",
@@ -108,7 +108,7 @@ export default function ContainerCard({ container, onRefresh }: Props) {
 					memory: memory ? parseInt(memory as string) : undefined,
 				}),
 			});
-			
+
 			if (res.ok) {
 				alert("Resource limits updated successfully");
 				fetchResources();

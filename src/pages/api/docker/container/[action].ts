@@ -5,6 +5,7 @@
 import type { APIRoute } from "astro";
 import { runAsync } from "../../../../lib/exec";
 import { getUserFromCookies } from "../../../../lib/auth";
+import { logAction, LOG_LEVELS, ERROR_CODES } from "../../../../lib/audit";
 
 export const POST: APIRoute = async ({ cookies, request, params }) => {
 	const user = getUserFromCookies(cookies);
@@ -30,11 +31,49 @@ export const POST: APIRoute = async ({ cookies, request, params }) => {
 
 		const result = await runAsync(cmdKey, [sanitized], 30000);
 
-		return new Response(
-			JSON.stringify({ ok: result.ok, message: result.stdout || result.stderr }),
-			{ status: result.ok ? 200 : 500, headers: { "Content-Type": "application/json" } }
+		if (!result.ok) {
+			const errorCode = action === "start" ? ERROR_CODES.ERR_CONTAINER_START_FAILED
+				: action === "stop" ? ERROR_CODES.ERR_CONTAINER_STOP_FAILED
+					: action === "restart" ? ERROR_CODES.ERR_CONTAINER_START_FAILED
+						: ERROR_CODES.ERR_CONTAINER_REMOVE_FAILED;
+
+			logAction(
+				user.username,
+				`CONTAINER_${action.toUpperCase()}`,
+				id,
+				`Failed: ${result.stderr || result.stdout}`,
+				undefined,
+				{ level: LOG_LEVELS.ERROR, code: errorCode }
+			);
+
+			return new Response(
+				JSON.stringify({ ok: false, error: result.stderr || "Action failed", code: errorCode }),
+				{ status: 500, headers: { "Content-Type": "application/json" } }
+			);
+		}
+
+		logAction(
+			user.username,
+			`CONTAINER_${action.toUpperCase()}`,
+			id,
+			`Container ${action} successful`,
+			undefined,
+			{ level: LOG_LEVELS.INFO, code: "INF001" }
 		);
-	} catch {
-		return new Response(JSON.stringify({ error: "Internal server error" }), { status: 500 });
+
+		return new Response(
+			JSON.stringify({ ok: true, message: result.stdout }),
+			{ status: 200, headers: { "Content-Type": "application/json" } }
+		);
+	} catch (err) {
+		logAction(
+			user.username,
+			"CONTAINER_ACTION",
+			params.action || "unknown",
+			`Internal error: ${err instanceof Error ? err.message : "Unknown error"}`,
+			undefined,
+			{ level: LOG_LEVELS.ERROR, code: ERROR_CODES.ERR_INTERNAL }
+		);
+		return new Response(JSON.stringify({ error: "Internal server error", code: ERROR_CODES.ERR_INTERNAL }), { status: 500 });
 	}
 };
