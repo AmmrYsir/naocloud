@@ -3,12 +3,9 @@ import BaseLayout from "../layouts/base-layout.astro";
 import Navbar from "../components/layout/navbar.astro";
 import Sidebar from "../components/layout/sidebar.astro";
 import { getUserFromCookies } from "../lib/auth";
-import { getSettings } from "../lib/settings";
 
 const user = getUserFromCookies(Astro.cookies);
 if (!user) return Astro.redirect("/login");
-
-const settings = getSettings();
 ---
 
 <BaseLayout title="Settings – ServerPilot">
@@ -16,198 +13,63 @@ const settings = getSettings();
 	<div class="flex flex-1 flex-col md:ml-64">
 		<Navbar username={user.username} />
 
-		<main class="flex-1 p-4 pb-20 md:p-6 md:pb-6">
+		<main class="flex-1 p-4 pb-16 md:p-6">
 			<div class="mb-6">
 				<h1 class="text-2xl font-bold tracking-tight">Settings</h1>
 				<p class="mt-1 text-sm text-gray-500">
-					Server configuration and preferences
+					Manage your server configuration
 				</p>
 			</div>
 
-			<div class="space-y-8">
-				<!-- Server Configuration -->
-				<section>
-					<h2 class="mb-4 text-lg font-semibold">
-						Server Configuration
-					</h2>
-					<div class="glass-card space-y-4">
-						<div>
-							<label
-								for="hostname"
-								class="block text-sm font-medium text-gray-300"
-								>Hostname</label
-							>
-							<input
-								type="text"
-								id="hostname"
-								value={settings.hostname}
-								placeholder="my-server"
-								class="mt-1 w-full rounded-xl border border-border-dim bg-white/5 px-4 py-2.5 text-sm text-gray-200 placeholder-gray-600 outline-none transition focus:border-accent/50 focus:ring-1 focus:ring-accent/30"
-							/>
-						</div>
-						<div>
-							<label
-								for="timezone"
-								class="block text-sm font-medium text-gray-300"
-								>Timezone</label
-							>
-							<select
-								id="timezone"
-								value={settings.timezone}
-								class="mt-1 w-full rounded-xl border border-border-dim bg-white/5 px-4 py-2.5 text-sm text-gray-200 outline-none transition focus:border-accent/50 focus:ring-1 focus:ring-accent/30"
-							>
-								<option value="UTC">UTC</option>
-								<option value="America/New_York"
-									>America/New_York</option
-								>
-								<option value="America/Chicago"
-									>America/Chicago</option
-								>
-								<option value="America/Denver"
-									>America/Denver</option
-								>
-								<option value="America/Los_Angeles"
-									>America/Los_Angeles</option
-								>
-								<option value="Europe/London"
-									>Europe/London</option
-								>
-								<option value="Europe/Paris"
-									>Europe/Paris</option
-								>
-								<option value="Europe/Berlin"
-									>Europe/Berlin</option
-								>
-								<option value="Asia/Tokyo">Asia/Tokyo</option>
-								<option value="Asia/Shanghai"
-									>Asia/Shanghai</option
-								>
-								<option value="Asia/Dubai">Asia/Dubai</option>
-								<option value="Australia/Sydney"
-									>Australia/Sydney</option
-								>
-							</select>
-						</div>
-						<button
-							id="btn-save-server"
-							class="rounded-xl bg-accent px-6 py-2.5 text-sm font-medium text-white transition hover:bg-accent/80"
-						>
-							Save Changes
-						</button>
-					</div>
-				</section>
-
-				<!-- Appearance -->
-				<section>
-					<h2 class="mb-4 text-lg font-semibold">Appearance</h2>
-					<div class="glass-card space-y-4">
-						<div class="flex items-center justify-between">
-							<div>
-								<p class="text-sm font-medium text-gray-300">
-									Dark Mode
-								</p>
-								<p class="text-xs text-gray-500">
-									Toggle between dark and light theme
-								</p>
-							</div>
-							<button
-								id="settings-theme-toggle"
-								class="relative h-7 w-12 rounded-full bg-emerald-500 transition-colors"
-							>
-								<span
-									class="absolute top-0.5 left-0.5 h-6 w-6 translate-x-5 rounded-full bg-white shadow-md transition-transform"
-								></span>
-							</button>
-						</div>
-					</div>
-				</section>
-
+			<div class="max-w-2xl">
 				<!-- Backup & Export -->
 				<section>
-					<h2 class="mb-4 text-lg font-semibold">Backup & Export</h2>
-					<div class="glass-card space-y-4">
-						<p class="text-sm text-gray-400">
-							Export your configuration as JSON or import a
-							previously saved backup.
-						</p>
-						<div class="flex flex-wrap gap-3">
-							<button
-								id="btn-export"
-								class="rounded-xl bg-blue-500/10 px-5 py-2.5 text-sm font-medium text-blue-400 transition hover:bg-blue-500/20"
-							>
-								Export Config
-							</button>
-							<label
-								class="cursor-pointer rounded-xl bg-emerald-500/10 px-5 py-2.5 text-sm font-medium text-emerald-400 transition hover:bg-emerald-500/20"
-							>
-								Import Config
-								<input
-									type="file"
-									id="import-file"
-									accept=".json"
-									class="hidden"
-								/>
-							</label>
-						</div>
-					</div>
-				</section>
-
-				<!-- User Management (placeholder for role-based access) -->
-				<section>
-					<h2 class="mb-4 text-lg font-semibold">User Management</h2>
 					<div class="glass-card">
-						<div
-							class="flex items-center justify-between rounded-xl bg-white/5 p-4"
-						>
-							<div class="flex items-center gap-3">
-								<div
-									class="flex h-10 w-10 items-center justify-center rounded-full bg-accent/20 text-sm font-bold text-accent"
-								>
-									{user.username[0].toUpperCase()}
-								</div>
-								<div>
-									<p class="text-sm font-semibold">
-										{user.username}
-									</p>
-									<p class="text-xs text-gray-500 capitalize">
-										{user.role}
-									</p>
-								</div>
+						<div class="flex items-center gap-4 mb-6">
+							<div class="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-500/20 shrink-0">
+								<svg class="h-6 w-6 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+									<path stroke-linecap="round" stroke-linejoin="round" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+								</svg>
 							</div>
-							<span
-								class="rounded-full bg-emerald-500/20 px-3 py-1 text-xs font-medium text-emerald-400"
-							>
-								Active
-							</span>
-						</div>
-						<p class="mt-4 text-xs text-gray-500">
-							Role-based access control with admin/viewer roles is
-							available for future expansion.
-						</p>
-					</div>
-				</section>
-
-				<!-- Danger Zone -->
-				<section>
-					<h2 class="mb-4 text-lg font-semibold text-red-400">
-						Danger Zone
-					</h2>
-					<div class="glass-card border-red-500/20 space-y-4">
-						<div class="flex items-center justify-between">
 							<div>
-								<p class="text-sm font-medium text-gray-300">
-									System Update
-								</p>
-								<p class="text-xs text-gray-500">
-									Run apt update && apt upgrade -y
-								</p>
+								<h2 class="text-lg font-semibold text-gray-200">Backup & Export</h2>
+								<p class="text-sm text-gray-500">Export or import your server configuration</p>
 							</div>
-							<button
-								id="btn-sys-update"
-								class="rounded-xl bg-red-500/10 px-5 py-2.5 text-sm font-medium text-red-400 transition hover:bg-red-500/20"
-							>
-								Update System
-							</button>
+						</div>
+
+						<div class="space-y-4">
+							<p class="text-sm text-gray-400">
+								Export your current configuration as a JSON file or import a previously saved backup to restore your settings.
+							</p>
+
+							<div class="flex flex-col sm:flex-row gap-3 pt-2">
+								<button
+									id="btn-export"
+									class="flex items-center justify-center gap-2 rounded-xl bg-blue-500/10 px-5 py-3 text-sm font-medium text-blue-400 transition hover:bg-blue-500/20"
+								>
+									<svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+										<path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+									</svg>
+									Export Config
+								</button>
+								<label
+									id="btn-import-label"
+									class="cursor-pointer flex items-center justify-center gap-2 rounded-xl bg-emerald-500/10 px-5 py-3 text-sm font-medium text-emerald-400 transition hover:bg-emerald-500/20"
+								>
+									<svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+										<path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+									</svg>
+									Import Config
+									<input
+										type="file"
+										id="import-file"
+										accept=".json"
+										class="hidden"
+									/>
+								</label>
+							</div>
+
+							<p id="import-status" class="text-sm hidden"></p>
 						</div>
 					</div>
 				</section>
@@ -217,11 +79,9 @@ const settings = getSettings();
 </BaseLayout>
 
 <script>
-	// Settings page client-side logic
 	const exportBtn = document.getElementById("btn-export");
 	const importInput = document.getElementById("import-file");
-	const saveBtn = document.getElementById("btn-save-server");
-	const themeToggle = document.getElementById("settings-theme-toggle");
+	const importStatus = document.getElementById("import-status");
 
 	exportBtn?.addEventListener("click", async () => {
 		try {
@@ -236,14 +96,26 @@ const settings = getSettings();
 			a.download = `serverpilot-config-${new Date().toISOString().slice(0, 10)}.json`;
 			a.click();
 			URL.revokeObjectURL(url);
+
+			if (importStatus) {
+				importStatus.textContent = "Config exported successfully!";
+				importStatus.className = "text-sm text-emerald-400 mt-3";
+				importStatus.classList.remove("hidden");
+				setTimeout(() => importStatus.classList.add("hidden"), 3000);
+			}
 		} catch {
-			alert("Failed to export config");
+			if (importStatus) {
+				importStatus.textContent = "Failed to export config";
+				importStatus.className = "text-sm text-red-400 mt-3";
+				importStatus.classList.remove("hidden");
+			}
 		}
 	});
 
 	importInput?.addEventListener("change", async (e) => {
 		const file = (e.target as HTMLInputElement).files?.[0];
 		if (!file) return;
+
 		const text = await file.text();
 		try {
 			const data = JSON.parse(text);
@@ -252,57 +124,31 @@ const settings = getSettings();
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify(data),
 			});
-			if (res.ok) alert("Config imported successfully");
-			else alert("Import failed");
-		} catch {
-			alert("Invalid JSON file");
-		}
-	});
 
-	saveBtn?.addEventListener("click", async () => {
-		const hostname = (
-			document.getElementById("hostname") as HTMLInputElement
-		)?.value;
-		const timezone = (
-			document.getElementById("timezone") as HTMLSelectElement
-		)?.value;
-		const res = await fetch("/api/settings", {
-			method: "POST",
-			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify({ hostname, timezone }),
-		});
-		if (res.ok) alert("Settings saved");
-		else alert("Failed to save settings");
-	});
-
-	themeToggle?.addEventListener("click", async () => {
-		document.body.classList.toggle("light");
-		const isLight = document.body.classList.contains("light");
-		localStorage.setItem("sp-theme", isLight ? "light" : "dark");
-		await fetch("/api/settings", {
-			method: "POST",
-			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify({ theme: isLight ? "light" : "dark" }),
-		});
-	});
-
-	// Initialize theme from settings
-	const initTheme = async () => {
-		try {
-			const res = await fetch("/api/settings");
-			const data = await res.json();
-			if (data.theme === "light") {
-				document.body.classList.add("light");
-				themeToggle?.classList.remove("bg-emerald-500");
-				themeToggle?.classList.add("bg-gray-400");
-				const span = themeToggle?.querySelector("span");
-				if (span) {
-					span.classList.remove("translate-x-5");
+			if (res.ok) {
+				if (importStatus) {
+					importStatus.textContent = "Config imported successfully!";
+					importStatus.className = "text-sm text-emerald-400 mt-3";
+					importStatus.classList.remove("hidden");
+					setTimeout(() => importStatus.classList.add("hidden"), 3000);
+				}
+			} else {
+				const err = await res.json();
+				if (importStatus) {
+					importStatus.textContent = err.error || "Import failed";
+					importStatus.className = "text-sm text-red-400 mt-3";
+					importStatus.classList.remove("hidden");
 				}
 			}
 		} catch {
-			// Use localStorage as fallback
+			if (importStatus) {
+				importStatus.textContent = "Invalid JSON file";
+				importStatus.className = "text-sm text-red-400 mt-3";
+				importStatus.classList.remove("hidden");
+			}
 		}
-	};
-	initTheme();
+
+		// Reset file input
+		(e.target as HTMLInputElement).value = "";
+	});
 </script>
