@@ -91,7 +91,7 @@ export default function ContainerCard({ container, onRefresh }: Props) {
 		}
 	}
 
-	async function updateResources(e: <HTMLFormElement>) {
+	async function updateResources(e: React.FormEvent<HTMLFormElement>) {
 		e.preventDefault();
 		setUpdatingResources(true);
 		try {
