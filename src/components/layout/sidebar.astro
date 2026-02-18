@@ -34,13 +34,6 @@ const coreItems = [
 		group: "",
 		order: 4,
 	},
-	{
-		label: "Profile",
-		href: "/profile",
-		icon: `<svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`,
-		group: "Admin",
-		order: 5,
-	},
 ];
 
 for (const item of coreItems) {
@@ -57,7 +50,7 @@ for (const group of Object.keys(groupedNavItems)) {
 	groupedNavItems[group].sort((a, b) => (a.order ?? 999) - (b.order ?? 999));
 }
 
-const orderedGroups: [string, typeof groupedNavItems[string]][] = [];
+const orderedGroups: [string, (typeof groupedNavItems)[string]][] = [];
 if (groupedNavItems[""]) {
 	orderedGroups.push(["", groupedNavItems[""]]);
 }
@@ -75,10 +68,22 @@ const userInitial = user?.username?.[0]?.toUpperCase() || "?";
 	class="hidden md:flex fixed left-0 top-0 z-40 h-screen w-64 flex-col border-r border-border-dim bg-panel/60 backdrop-blur-xl"
 >
 	<!-- Logo -->
-	<div class="flex h-[60px] items-center gap-3 border-b border-border-dim px-4">
-		<div class="flex h-9 w-9 items-center justify-center rounded-lg bg-accent">
-			<svg class="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-				<path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+	<div
+		class="flex h-[60px] items-center gap-3 border-b border-border-dim px-4"
+	>
+		<div
+			class="flex h-9 w-9 items-center justify-center rounded-lg bg-accent"
+		>
+			<svg
+				class="h-5 w-5 text-white"
+				fill="none"
+				viewBox="0 0 24 24"
+				stroke="currentColor"
+				stroke-width="2"
+			>
+				<path
+					d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
+				></path>
 			</svg>
 		</div>
 		<span class="text-lg font-bold text-gray-100">ServerPilot</span>
@@ -97,7 +102,8 @@ const userInitial = user?.username?.[0]?.toUpperCase() || "?";
 						{items.map((item) => {
 							const active =
 								currentPath === item.href ||
-								(item.href !== "/" && currentPath.startsWith(item.href));
+								(item.href !== "/" &&
+									currentPath.startsWith(item.href));
 							return (
 								<a
 									href={item.href}
@@ -124,15 +130,27 @@ const userInitial = user?.username?.[0]?.toUpperCase() || "?";
 		href="/profile"
 		class="flex items-center gap-3 border-t border-border-dim p-4 transition hover:bg-white/5"
 	>
-		<div class="flex h-9 w-9 items-center justify-center rounded-full bg-accent text-sm font-bold text-white">
+		<div
+			class="flex h-9 w-9 items-center justify-center rounded-full bg-accent text-sm font-bold text-white"
+		>
 			{userInitial}
 		</div>
 		<div class="flex-1 overflow-hidden">
-			<p class="truncate text-sm font-medium text-gray-200">{user?.username || "User"}</p>
-			<p class="truncate text-xs capitalize text-gray-500">{user?.role || "viewer"}</p>
+			<p class="truncate text-sm font-medium text-gray-200">
+				{user?.username || "User"}
+			</p>
+			<p class="truncate text-xs capitalize text-gray-500">
+				{user?.role || "viewer"}
+			</p>
 		</div>
-		<svg class="h-4 w-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-			<path d="M9 5l7 7-7 7"/>
+		<svg
+			class="h-4 w-4 text-gray-500"
+			fill="none"
+			viewBox="0 0 24 24"
+			stroke="currentColor"
+			stroke-width="2"
+		>
+			<path d="M9 5l7 7-7 7"></path>
 		</svg>
 	</a>
 
@@ -148,7 +166,7 @@ const userInitial = user?.username?.[0]?.toUpperCase() || "?";
 		[
 			...coreItems,
 			...(groupedNavItems[""] || []).filter(
-				(i) => !coreItems.find((c) => c.href === i.href)
+				(i) => !coreItems.find((c) => c.href === i.href),
 			),
 		].map((item) => {
 			const active =
@@ -159,7 +177,9 @@ const userInitial = user?.username?.[0]?.toUpperCase() || "?";
 					href={item.href}
 					class:list={[
 						"flex flex-col items-center gap-1 rounded-xl px-3 py-1.5 text-[10px] font-medium transition",
-						active ? "text-accent" : "text-gray-500 hover:text-gray-300",
+						active
+							? "text-accent"
+							: "text-gray-500 hover:text-gray-300",
 					]}
 				>
 					<Fragment set:html={item.icon} />
