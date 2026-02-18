@@ -57,6 +57,14 @@ async function loadCoreModules(): Promise<void> {
 	} catch (err) {
 		console.error("[modules] Failed to load audit module:", err);
 	}
+
+	// Load Modules page as a core module
+	try {
+		const { default: modulesManifest } = await import("./core/modules/manifest");
+		registerModule({ ...modulesManifest, id: "modules", type: "core" });
+	} catch (err) {
+		console.error("[modules] Failed to load modules module:", err);
+	}
 }
 
 /**

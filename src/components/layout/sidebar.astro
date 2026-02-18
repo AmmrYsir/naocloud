@@ -14,11 +14,32 @@ const coreItems = [
 		order: 1,
 	},
 	{
-		label: "Modules",
-		href: "/modules",
-		icon: `<svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>`,
+		label: "Docker",
+		href: "/docker",
+		icon: `<svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M21 8c-1.45 0-2.26.15-3 .5-1.12-1.28-2.7-2-4.5-2h-3c-1.8 0-3.38.72-4.5 2C5.26 8.15 4.45 8 3 8c-1 0-1 2 0 2 .6 0 1 .1 1.4.3C4.15 11.4 4 12.6 4 14c0 3.32 2.68 6 6 6h4c3.32 0 6-2.68 6-6 0-1.4-.15-2.6-.4-3.7.4-.2.8-.3 1.4-.3 1 0 1-2 0-2z"/></svg>`,
 		group: "",
-		order: 6,
+		order: 2,
+	},
+	{
+		label: "Services",
+		href: "/services",
+		icon: `<svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>`,
+		group: "",
+		order: 3,
+	},
+	{
+		label: "System",
+		href: "/system",
+		icon: `<svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8m-4-4v4"/></svg>`,
+		group: "",
+		order: 4,
+	},
+	{
+		label: "Profile",
+		href: "/profile",
+		icon: `<svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`,
+		group: "Admin",
+		order: 5,
 	},
 ];
 
@@ -27,22 +48,45 @@ for (const item of coreItems) {
 	if (!groupedNavItems[group]) {
 		groupedNavItems[group] = [];
 	}
-	groupedNavItems[group].push(item);
+	if (!groupedNavItems[group].find((i) => i.href === item.href)) {
+		groupedNavItems[group].push(item);
+	}
 }
 
 for (const group of Object.keys(groupedNavItems)) {
 	groupedNavItems[group].sort((a, b) => (a.order ?? 999) - (b.order ?? 999));
 }
 
+const orderedGroups: [string, typeof groupedNavItems[string]][] = [];
+if (groupedNavItems[""]) {
+	orderedGroups.push(["", groupedNavItems[""]]);
+}
+for (const [name, items] of Object.entries(groupedNavItems)) {
+	if (name !== "") {
+		orderedGroups.push([name, items]);
+	}
+}
+
 const currentPath = Astro.url.pathname;
+const userInitial = user?.username?.[0]?.toUpperCase() || "?";
 ---
 
 <aside
-	class="hidden md:flex fixed left-0 top-0 z-40 h-screen w-64 flex-col border-r border-border-dim bg-panel/60 backdrop-blur-xl pt-[60px]"
+	class="hidden md:flex fixed left-0 top-0 z-40 h-screen w-64 flex-col border-r border-border-dim bg-panel/60 backdrop-blur-xl"
 >
-	<nav class="flex-1 space-y-6 overflow-y-auto px-3 py-4">
+	<!-- Logo -->
+	<div class="flex h-[60px] items-center gap-3 border-b border-border-dim px-4">
+		<div class="flex h-9 w-9 items-center justify-center rounded-lg bg-accent">
+			<svg class="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+				<path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+			</svg>
+		</div>
+		<span class="text-lg font-bold text-gray-100">ServerPilot</span>
+	</div>
+
+	<nav class="flex-1 space-y-6 overflow-y-auto px-3 py-4 pt-6">
 		{
-			Object.entries(groupedNavItems).map(([groupName, items]) => (
+			orderedGroups.map(([groupName, items]) => (
 				<div>
 					{groupName && (
 						<h3 class="mb-2 px-4 text-xs font-semibold uppercase tracking-wider text-gray-500">
@@ -74,6 +118,23 @@ const currentPath = Astro.url.pathname;
 			))
 		}
 	</nav>
+
+	<!-- Profile Badge -->
+	<a
+		href="/profile"
+		class="flex items-center gap-3 border-t border-border-dim p-4 transition hover:bg-white/5"
+	>
+		<div class="flex h-9 w-9 items-center justify-center rounded-full bg-accent text-sm font-bold text-white">
+			{userInitial}
+		</div>
+		<div class="flex-1 overflow-hidden">
+			<p class="truncate text-sm font-medium text-gray-200">{user?.username || "User"}</p>
+			<p class="truncate text-xs capitalize text-gray-500">{user?.role || "viewer"}</p>
+		</div>
+		<svg class="h-4 w-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+			<path d="M9 5l7 7-7 7"/>
+		</svg>
+	</a>
 
 	<div class="border-t border-border-dim p-4 text-xs text-gray-500">
 		ServerPilot v1.0.0

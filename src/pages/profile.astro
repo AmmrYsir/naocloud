@@ -1,0 +1,226 @@
+---
+import BaseLayout from "../layouts/base-layout.astro";
+import Navbar from "../components/layout/navbar.astro";
+import Sidebar from "../components/layout/sidebar.astro";
+import { getUserFromCookies } from "../lib/auth";
+import { getUser } from "../lib/users";
+
+const user = getUserFromCookies(Astro.cookies);
+if (!user) return Astro.redirect("/login");
+
+const dbUser = getUser(user.username);
+---
+
+<BaseLayout title="Profile – ServerPilot">
+	<Sidebar />
+	<div class="flex flex-1 flex-col md:ml-64">
+		<Navbar username={user.username} />
+
+		<main class="flex-1 p-4 pb-20 md:p-6 md:pb-6">
+			<div class="mb-6">
+				<h1 class="text-2xl font-bold tracking-tight">Profile</h1>
+				<p class="mt-1 text-sm text-gray-500">
+					Manage your account settings
+				</p>
+			</div>
+
+			<div class="space-y-8 max-w-2xl">
+				<!-- Profile Information -->
+				<section>
+					<h2 class="mb-4 text-lg font-semibold">Profile Information</h2>
+					<div class="glass-card space-y-4">
+						<div class="flex items-center gap-4">
+							<div class="flex h-16 w-16 items-center justify-center rounded-full bg-accent text-2xl font-bold text-white">
+								{user.username[0].toUpperCase()}
+							</div>
+							<div>
+								<p class="text-lg font-semibold text-gray-200">{user.username}</p>
+								<p class="text-sm capitalize text-gray-500">{user.role}</p>
+							</div>
+						</div>
+						<div class="grid grid-cols-2 gap-4 pt-4">
+							<div>
+								<p class="text-xs text-gray-500">Created</p>
+								<p class="text-sm text-gray-300">
+									{dbUser?.createdAt ? new Date(dbUser.createdAt).toLocaleDateString() : "N/A"}
+								</p>
+							</div>
+							<div>
+								<p class="text-xs text-gray-500">Last Login</p>
+								<p class="text-sm text-gray-300">
+									{dbUser?.lastLogin ? new Date(dbUser.lastLogin).toLocaleDateString() : "N/A"}
+								</p>
+							</div>
+						</div>
+					</div>
+				</section>
+
+				<!-- Update Profile -->
+				<section>
+					<h2 class="mb-4 text-lg font-semibold">Update Profile</h2>
+					<div class="glass-card space-y-4">
+						<div>
+							<label for="displayName" class="block text-sm font-medium text-gray-300">
+								Display Name
+							</label>
+							<input
+								type="text"
+								id="displayName"
+								placeholder="Enter display name"
+								class="mt-1 w-full rounded-xl border border-border-dim bg-white/5 px-4 py-2.5 text-sm text-gray-200 placeholder-gray-600 outline-none transition focus:border-accent/50 focus:ring-1 focus:ring-accent/30"
+							/>
+							<p class="mt-1 text-xs text-gray-500">Coming soon - this feature is not yet available.</p>
+						</div>
+					</div>
+				</section>
+
+				<!-- Email Settings -->
+				<section>
+					<h2 class="mb-4 text-lg font-semibold">Email Settings</h2>
+					<div class="glass-card space-y-4">
+						<div>
+							<label for="email" class="block text-sm font-medium text-gray-300">
+								Email Address
+							</label>
+							<div class="relative mt-1">
+								<input
+									type="email"
+									id="email"
+									placeholder="your@email.com"
+									class="w-full rounded-xl border border-border-dim bg-white/5 px-4 py-2.5 pr-20 text-sm text-gray-200 placeholder-gray-600 outline-none transition focus:border-accent/50 focus:ring-1 focus:ring-accent/30"
+								/>
+								<span class="absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-amber-500/20 px-2 py-0.5 text-xs font-medium text-amber-400">
+									Coming Soon
+								</span>
+							</div>
+						</div>
+						<button
+							disabled
+							class="rounded-xl bg-accent/50 px-6 py-2.5 text-sm font-medium text-white cursor-not-allowed opacity-50"
+						>
+							Save Email
+						</button>
+					</div>
+				</section>
+
+				<!-- Security -->
+				<section>
+					<h2 class="mb-4 text-lg font-semibold">Security</h2>
+					<div class="glass-card space-y-6">
+						<!-- Change Password -->
+						<div>
+							<h3 class="mb-3 text-sm font-medium text-gray-300">Change Password</h3>
+							<div class="space-y-3">
+								<input
+									type="password"
+									id="currentPassword"
+									placeholder="Current password"
+									class="w-full rounded-xl border border-border-dim bg-white/5 px-4 py-2.5 text-sm text-gray-200 placeholder-gray-600 outline-none transition focus:border-accent/50 focus:ring-1 focus:ring-accent/30"
+								/>
+								<input
+									type="password"
+									id="newPassword"
+									placeholder="New password"
+									class="w-full rounded-xl border border-border-dim bg-white/5 px-4 py-2.5 text-sm text-gray-200 placeholder-gray-600 outline-none transition focus:border-accent/50 focus:ring-1 focus:ring-accent/30"
+								/>
+								<input
+									type="password"
+									id="confirmPassword"
+									placeholder="Confirm new password"
+									class="w-full rounded-xl border border-border-dim bg-white/5 px-4 py-2.5 text-sm text-gray-200 placeholder-gray-600 outline-none transition focus:border-accent/50 focus:ring-1 focus:ring-accent/30"
+								/>
+							</div>
+							<button
+								id="btn-change-password"
+								class="mt-3 rounded-xl bg-accent px-6 py-2.5 text-sm font-medium text-white transition hover:bg-accent/80"
+							>
+								Change Password
+							</button>
+						</div>
+
+						<div class="border-t border-border-dim pt-6">
+							<div class="flex items-center justify-between">
+								<div>
+									<h3 class="text-sm font-medium text-gray-300">Two-Factor Authentication</h3>
+									<p class="text-xs text-gray-500">Add an extra layer of security to your account</p>
+								</div>
+								<span class="rounded-full bg-amber-500/20 px-2 py-0.5 text-xs font-medium text-amber-400">
+									Coming Soon
+								</span>
+							</div>
+							<button
+								disabled
+								class="mt-3 w-full rounded-xl border border-border-dim bg-white/5 px-6 py-2.5 text-sm font-medium text-gray-400 cursor-not-allowed opacity-50"
+							>
+								Enable 2FA
+							</button>
+						</div>
+					</div>
+				</section>
+
+				<!-- Danger Zone -->
+				<section>
+					<h2 class="mb-4 text-lg font-semibold text-red-400">Danger Zone</h2>
+					<div class="glass-card border-red-500/20 space-y-4">
+						<div class="flex items-center justify-between">
+							<div>
+								<p class="text-sm font-medium text-gray-300">Delete Account</p>
+								<p class="text-xs text-gray-500">Permanently delete your account and all data</p>
+							</div>
+							<button
+								class="rounded-xl bg-red-500/10 px-5 py-2.5 text-sm font-medium text-red-400 transition hover:bg-red-500/20"
+							>
+								Delete Account
+							</button>
+						</div>
+					</div>
+				</section>
+			</div>
+		</main>
+	</div>
+</BaseLayout>
+
+<script>
+	const changePasswordBtn = document.getElementById("btn-change-password");
+
+	changePasswordBtn?.addEventListener("click", async () => {
+		const currentPassword = (document.getElementById("currentPassword") as HTMLInputElement)?.value;
+		const newPassword = (document.getElementById("newPassword") as HTMLInputElement)?.value;
+		const confirmPassword = (document.getElementById("confirmPassword") as HTMLInputElement)?.value;
+
+		if (!currentPassword || !newPassword || !confirmPassword) {
+			alert("Please fill in all password fields");
+			return;
+		}
+
+		if (newPassword !== confirmPassword) {
+			alert("New passwords do not match");
+			return;
+		}
+
+		if (newPassword.length < 6) {
+			alert("Password must be at least 6 characters");
+			return;
+		}
+
+		try {
+			const res = await fetch("/api/modules/security/password", {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({ currentPassword, newPassword }),
+			});
+
+			if (res.ok) {
+				alert("Password changed successfully");
+				(document.getElementById("currentPassword") as HTMLInputElement).value = "";
+				(document.getElementById("newPassword") as HTMLInputElement).value = "";
+				(document.getElementById("confirmPassword") as HTMLInputElement).value = "";
+			} else {
+				const data = await res.json();
+				alert(data.error || "Failed to change password");
+			}
+		} catch {
+			alert("An error occurred");
+		}
+	});
+</script>
