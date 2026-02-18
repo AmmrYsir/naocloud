@@ -27,23 +27,6 @@ if (!user) return Astro.redirect("/login");
 			<!-- Live system stats (React island) -->
 			<DashboardStats client:load />
 
-			<!-- Services section -->
-			<div class="mt-8">
-				<h2 class="mb-4 text-lg font-semibold">Services</h2>
-				<div
-					class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4"
-				>
-					<ServiceToggle client:load name="nginx" label="Nginx" />
-					<ServiceToggle client:load name="ssh" label="SSH" />
-					<ServiceToggle
-						client:load
-						name="ufw"
-						label="Firewall (UFW)"
-					/>
-					<ServiceToggle client:load name="docker" label="Docker" />
-				</div>
-			</div>
-
 			<!-- Quick Actions -->
 			<div class="mt-8">
 				<h2 class="mb-4 text-lg font-semibold">Quick Actions</h2>
