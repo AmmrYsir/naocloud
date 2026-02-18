@@ -22,7 +22,7 @@ export const GET: APIRoute = async ({ cookies }) => {
 	try {
 		// Get all running compose projects
 		const result = execFileSync(
-			"docker-compose",
+			"docker",
 			["ls", "--all", "--format", "json"],
 			{ encoding: "utf-8", timeout: 30000 }
 		);
