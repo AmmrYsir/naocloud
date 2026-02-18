@@ -266,12 +266,41 @@ export default function ModuleManager() {
 		}
 	}
 
-	const filteredModules = modules.filter((m) => {
-		const matchesSearch =
-			m.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-			m.description.toLowerCase().includes(searchQuery.toLowerCase());
-		return matchesSearch;
-	});
+	const filteredModules = modules
+		.filter((m) => {
+			const matchesSearch =
+				m.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+				m.description.toLowerCase().includes(searchQuery.toLowerCase());
+			return matchesSearch;
+		})
+		.sort((a, b) => {
+			// Sort order:
+			// 1. Enabled modules first (by name)
+			// 2. Disabled modules (by name)
+			// 3. Protected modules last (by name)
+			
+			const aProtected = !a.canDisable;
+			const bProtected = !b.canDisable;
+			const aEnabled = a.enabled;
+			const bEnabled = b.enabled;
+			
+			// Both protected - sort by name
+			if (aProtected && bProtected) {
+				return a.name.localeCompare(b.name);
+			}
+			
+			// One is protected - protected goes last
+			if (aProtected && !bProtected) return 1;
+			if (!aProtected && bProtected) return -1;
+			
+			// Both enabled or both disabled - sort by enabled status first, then name
+			if (aEnabled !== bEnabled) {
+				return aEnabled ? -1 : 1;
+			}
+			
+			// Same enabled status - sort by name
+			return a.name.localeCompare(b.name);
+		});
 
 	if (loading) {
 		return (
