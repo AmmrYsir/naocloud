@@ -6,7 +6,6 @@
  */
 
 import { registerModule } from "./registry";
-import type { ModuleManifest } from "./types";
 
 /**
  * Load all core modules

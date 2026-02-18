@@ -5,8 +5,6 @@
 import type { APIRoute } from "astro";
 import { getUserFromCookies } from "../../../../lib/auth";
 import { execFileSync } from "child_process";
-import * as fs from "fs";
-import * as path from "path";
 
 interface ComposeProject {
 	name: string;

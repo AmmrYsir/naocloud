@@ -5,11 +5,25 @@
 import { useState, useEffect, useRef } from "react";
 import Chart from "./chart.tsx";
 
+interface SystemStats {
+	cpu?: { percent?: number; cores?: number; loadAvg?: string };
+	memory?: { used?: string; total?: string; usedPercent?: number };
+	disk?: { used?: string; total?: string; usedPercent?: number };
+	uptime?: string;
+	network?: { tx?: string; rx?: string };
+}
+
+interface History {
+	cpu: number[];
+	ram: number[];
+	disk: number[];
+}
+
 export default function DashboardStats() {
-	const [stats, setStats] = useState(null);
-	const [history, setHistory] = useState({ cpu: [], ram: [], disk: [] });
-	const [error, setError] = useState(null);
-	const intervalRef = useRef(null);
+	const [stats, setStats] = useState<SystemStats | null>(null);
+	const [history, setHistory] = useState<History>({ cpu: [], ram: [], disk: [] });
+	const [error, setError] = useState<string | null>(null);
+	const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
 	const fetchStats = async () => {
 		try {
@@ -31,7 +45,9 @@ export default function DashboardStats() {
 	useEffect(() => {
 		fetchStats();
 		intervalRef.current = setInterval(fetchStats, 3000);
-		return () => clearInterval(intervalRef.current);
+		return () => {
+			if (intervalRef.current) clearInterval(intervalRef.current);
+		};
 	}, []);
 
 	if (error) {

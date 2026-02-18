@@ -4,7 +4,13 @@
  */
 import { useState } from "react";
 
-export default function ServiceToggle({ name, label, initialActive = false }) {
+interface Props {
+	name: string;
+	label?: string;
+	initialActive?: boolean;
+}
+
+export default function ServiceToggle({ name, label, initialActive = false }: Props) {
 	const [active, setActive] = useState(initialActive);
 	const [loading, setLoading] = useState(false);
 

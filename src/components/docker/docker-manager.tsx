@@ -4,18 +4,64 @@
 import { useState, useEffect } from "react";
 import ContainerCard from "./container-card";
 
+interface DockerContainer {
+	Id: string;
+	Names?: string[];
+	Image?: string;
+	State?: string;
+	Status?: string;
+	Ports?: Array<{ PublicPort?: number; PrivatePort: number; Type?: string }>;
+}
+
+interface DockerImage {
+	Id: string;
+	RepoTags?: string[];
+	Size?: number;
+	Created?: number;
+}
+
+interface DockerVolume {
+	Name: string;
+	Driver: string;
+	Mountpoint: string;
+}
+
+interface DockerNetwork {
+	Name: string;
+	Driver: string;
+	Scope: string;
+}
+
+interface ComposeProject {
+	Name: string;
+	Status: string;
+	services: string[];
+}
+
+interface ScanResult {
+	imageTag: string;
+	error?: string;
+	scan?: {
+		Results?: Array<{
+			Target?: string;
+			Vulnerabilities?: Array<{ Severity?: string; Title?: string; VulnerabilityID?: string }>;
+		}>;
+	};
+	summary?: { critical?: number; high?: number };
+}
+
 export default function DockerManager() {
 	const [tab, setTab] = useState("containers");
-	const [containers, setContainers] = useState([]);
-	const [images, setImages] = useState([]);
-	const [volumes, setVolumes] = useState([]);
-	const [networks, setNetworks] = useState([]);
-	const [composeProjects, setComposeProjects] = useState([]);
+	const [containers, setContainers] = useState<DockerContainer[]>([]);
+	const [images, setImages] = useState<DockerImage[]>([]);
+	const [volumes, setVolumes] = useState<DockerVolume[]>([]);
+	const [networks, setNetworks] = useState<DockerNetwork[]>([]);
+	const [composeProjects, setComposeProjects] = useState<ComposeProject[]>([]);
 	const [loading, setLoading] = useState(true);
-	const [error, setError] = useState(null);
-	const [scanningImage, setScanningImage] = useState(null);
-	const [scanResult, setScanResult] = useState(null);
-	const [backingUpVolume, setBackingUpVolume] = useState(null);
+	const [error, setError] = useState<string | null>(null);
+	const [scanningImage, setScanningImage] = useState<string | null>(null);
+	const [scanResult, setScanResult] = useState<ScanResult | null>(null);
+	const [backingUpVolume, setBackingUpVolume] = useState<string | null>(null);
 
 	useEffect(() => {
 		fetchAll();
@@ -44,7 +90,7 @@ export default function DockerManager() {
 		}
 	}
 
-	async function scanImage(imageId, imageTag) {
+	async function scanImage(imageId: string, imageTag: string) {
 		setScanningImage(imageId);
 		try {
 			const res = await fetch(`/api/docker/images/${imageId}/scan`, {
@@ -53,14 +99,14 @@ export default function DockerManager() {
 			});
 			const data = await res.json();
 			setScanResult({ ...data, imageTag });
-		} catch (err) {
+		} catch {
 			setScanResult({ error: "Scan failed", imageTag });
 		} finally {
 			setScanningImage(null);
 		}
 	}
 
-	async function backupVolume(volumeName) {
+	async function backupVolume(volumeName: string) {
 		setBackingUpVolume(volumeName);
 		try {
 			const res = await fetch(`/api/docker/volumes/${volumeName}/backup`, {
@@ -74,13 +120,13 @@ export default function DockerManager() {
 				alert(`Backup failed: ${data.error}`);
 			}
 		} catch (err) {
-			alert(`Backup failed: ${err.message}`);
+			alert(`Backup failed: ${err instanceof Error ? err.message : "Unknown error"}`);
 		} finally {
 			setBackingUpVolume(null);
 		}
 	}
 
-	async function composeAction(project, action) {
+	async function composeAction(project: string, action: string) {
 		try {
 			const res = await fetch(`/api/docker/compose/${project}/action`, {
 				method: "POST",
@@ -95,7 +141,7 @@ export default function DockerManager() {
 				alert(`Action failed: ${data.error}`);
 			}
 		} catch (err) {
-			alert(`Action failed: ${err.message}`);
+			alert(`Action failed: ${err instanceof Error ? err.message : "Unknown error"}`);
 		}
 	}
 
@@ -164,8 +210,8 @@ export default function DockerManager() {
 										<span className="text-sm ml-1">High</span>
 									</div>
 								</div>
-								{scanResult.scan?.Results?.map((result, i) => (
-									result.Vulnerabilities?.length > 0 && (
+							{scanResult.scan?.Results?.map((result, i) => (
+									result.Vulnerabilities && result.Vulnerabilities.length > 0 && (
 										<div key={i} className="mb-4">
 											<h4 className="font-semibold mb-2">{result.Target}</h4>
 											<div className="space-y-2">
@@ -227,10 +273,10 @@ export default function DockerManager() {
 													{img.RepoTags?.[0] ?? img.Id?.slice(7, 19)}
 												</h4>
 												<p className="mt-1 text-xs text-gray-500">
-													Size: {(img.Size / 1024 / 1024).toFixed(1)} MB
+													Size: {img.Size ? (img.Size / 1024 / 1024).toFixed(1) : "N/A"} MB
 												</p>
 												<p className="text-xs text-gray-500">
-													Created: {new Date(img.Created * 1000).toLocaleDateString()}
+													Created: {img.Created ? new Date(img.Created * 1000).toLocaleDateString() : "N/A"}
 												</p>
 											</div>
 										</div>

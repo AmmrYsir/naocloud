@@ -2,16 +2,44 @@
  * DockerList.jsx – Interactive Docker container list with actions (React island).
  */
 import { useState, useEffect } from "react";
-import ContainerCard from "./ContainerCard.jsx";
+import ContainerCard from "./container-card";
+
+interface DockerContainer {
+	Id: string;
+	Names?: string[];
+	Image?: string;
+	State?: string;
+	Status?: string;
+	Ports?: Array<{ PublicPort?: number; PrivatePort: number; Type?: string }>;
+}
+
+interface DockerImage {
+	Id: string;
+	RepoTags?: string[];
+	Size?: number;
+	Created?: number;
+}
+
+interface DockerVolume {
+	Name: string;
+	Driver: string;
+	Mountpoint: string;
+}
+
+interface DockerNetwork {
+	Name: string;
+	Driver: string;
+	Scope: string;
+}
 
 export default function DockerList() {
 	const [tab, setTab] = useState("containers");
-	const [containers, setContainers] = useState([]);
-	const [images, setImages] = useState([]);
-	const [volumes, setVolumes] = useState([]);
-	const [networks, setNetworks] = useState([]);
+	const [containers, setContainers] = useState<DockerContainer[]>([]);
+	const [images, setImages] = useState<DockerImage[]>([]);
+	const [volumes, setVolumes] = useState<DockerVolume[]>([]);
+	const [networks, setNetworks] = useState<DockerNetwork[]>([]);
 	const [loading, setLoading] = useState(true);
-	const [error, setError] = useState(null);
+	const [error, setError] = useState<string | null>(null);
 
 	useEffect(() => {
 		fetchAll();
@@ -108,16 +136,16 @@ export default function DockerList() {
 									<p className="text-sm text-gray-500">No images found</p>
 								</div>
 							) : (
-								images.map((img, i) => (
+							images.map((img, i) => (
 									<div key={i} className="glass-card">
 										<h4 className="truncate text-sm font-semibold">
 											{img.RepoTags?.[0] ?? img.Id?.slice(7, 19)}
 										</h4>
 										<p className="mt-1 text-xs text-gray-500">
-											Size: {(img.Size / 1024 / 1024).toFixed(1)} MB
+											Size: {img.Size ? (img.Size / 1024 / 1024).toFixed(1) : "N/A"} MB
 										</p>
 										<p className="text-xs text-gray-500">
-											Created: {new Date(img.Created * 1000).toLocaleDateString()}
+											Created: {img.Created ? new Date(img.Created * 1000).toLocaleDateString() : "N/A"}
 										</p>
 									</div>
 								))

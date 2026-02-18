@@ -3,13 +3,33 @@
  */
 import { useState } from "react";
 
-export default function ContainerCard({ container, onRefresh }) {
+interface Container {
+	Id: string;
+	Names?: string[];
+	Image?: string;
+	State?: string;
+	Status?: string;
+	Ports?: Array<{ PublicPort?: number; PrivatePort: number; Type?: string }>;
+}
+
+interface ContainerResources {
+	limits?: { cpu?: string; memory?: string };
+	stats?: string;
+	error?: string;
+}
+
+interface Props {
+	container: Container;
+	onRefresh?: () => void;
+}
+
+export default function ContainerCard({ container, onRefresh }: Props) {
 	const [loading, setLoading] = useState(false);
-	const [confirm, setConfirm] = useState(null);
+	const [confirm, setConfirm] = useState<string | null>(null);
 	const [showLogs, setShowLogs] = useState(false);
 	const [logs, setLogs] = useState("");
 	const [showResources, setShowResources] = useState(false);
-	const [resources, setResources] = useState(null);
+	const [resources, setResources] = useState<ContainerResources | null>(null);
 	const [updatingResources, setUpdatingResources] = useState(false);
 
 	const name = container.Names?.[0]?.replace(/^\//, "") ?? container.Id?.slice(0, 12);
@@ -17,7 +37,7 @@ export default function ContainerCard({ container, onRefresh }) {
 	const state = container.State ?? "unknown";
 	const status = container.Status ?? "";
 
-	const stateColors = {
+	const stateColors: Record<string, string> = {
 		running: "bg-emerald-500/20 text-emerald-400 border-emerald-500/30",
 		paused: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
 		exited: "bg-red-500/20 text-red-400 border-red-500/30",
@@ -25,7 +45,7 @@ export default function ContainerCard({ container, onRefresh }) {
 	};
 	const badgeClass = stateColors[state] || "bg-gray-500/20 text-gray-400 border-gray-500/30";
 
-	async function doAction(action) {
+	async function doAction(action: string) {
 		setLoading(true);
 		setConfirm(null);
 		try {
@@ -71,11 +91,11 @@ export default function ContainerCard({ container, onRefresh }) {
 		}
 	}
 
-	async function updateResources(e) {
+	async function updateResources(e: React.FormEvent<HTMLFormElement>) {
 		e.preventDefault();
 		setUpdatingResources(true);
 		try {
-			const formData = new FormData(e.target);
+			const formData = new FormData(e.currentTarget);
 			const cpu = formData.get("cpu");
 			const memory = formData.get("memory");
 			
@@ -84,8 +104,8 @@ export default function ContainerCard({ container, onRefresh }) {
 				credentials: "same-origin",
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify({
-					cpu: cpu ? parseFloat(cpu) : undefined,
-					memory: memory ? parseInt(memory) : undefined,
+					cpu: cpu ? parseFloat(cpu as string) : undefined,
+					memory: memory ? parseInt(memory as string) : undefined,
 				}),
 			});
 			
@@ -96,7 +116,7 @@ export default function ContainerCard({ container, onRefresh }) {
 				alert("Failed to update resources");
 			}
 		} catch (err) {
-			alert(`Error: ${err.message}`);
+			alert(`Error: ${err instanceof Error ? err.message : "Unknown error"}`);
 		} finally {
 			setUpdatingResources(false);
 		}
@@ -125,9 +145,9 @@ export default function ContainerCard({ container, onRefresh }) {
 			<p className="text-xs text-gray-400">{status}</p>
 
 			{/* Ports */}
-			{container.Ports?.length > 0 && (
+			{container.Ports && container.Ports.length > 0 && (
 				<div className="flex flex-wrap gap-1">
-					{container.Ports.filter((p) => p.PublicPort).map((p, i) => (
+					{container.Ports.filter((p): p is NonNullable<typeof p> => !!p.PublicPort).map((p, i) => (
 						<span key={i} className="rounded-md bg-blue-500/10 px-1.5 py-0.5 text-[10px] text-blue-400">
 							{p.PublicPort}→{p.PrivatePort}/{p.Type}
 						</span>

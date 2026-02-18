@@ -6,8 +6,8 @@
  * - Initializes the module system on first request
  */
 import { defineMiddleware } from "astro:middleware";
-import { isLocalNetwork, getUserFromCookies, verifyToken } from "./lib/auth";
-import { getAllPages, getModule } from "./modules/registry";
+import { isLocalNetwork, verifyToken } from "./lib/auth";
+import { getAllPages } from "./modules/registry";
 import type { UserRole } from "./lib/users";
 
 let modulesInitialized = false;
